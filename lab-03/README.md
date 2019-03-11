@@ -9,7 +9,7 @@ To make copy/pasting easier we will again export our username first:
 export USERNAME=<username>
 ```
 
-## Task 1: Create a namespace
+## Task 1: Creating a namespace
 
 Before we start with this lab we will create a new namespace:
 

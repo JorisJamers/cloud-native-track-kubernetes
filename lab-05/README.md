@@ -121,7 +121,7 @@ spec:
         - containerPort: 80
 ```
 
-## Task 4: Cleaning up:
+## Task 4: Cleaning up
 
 Clean up any namespaces you might have created during this lab: 
 `kubectl delete ns ...`
