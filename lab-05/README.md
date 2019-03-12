@@ -99,27 +99,11 @@ kubectl expose deployment container-info --type=NodePort --name=my-container-inf
 -n lab-05-${USERNAME}
 ```
 
-Our service is exposed now. Let's go find the port where it is running on.
+Our service is exposed now. Let's go find the port where it is running on. We
+will be able to open te service in your default browser with the following command.
 
 ```
-kubectl get services -n lab-05-${USERNAME}
-
-NAME                        TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
-my-container-info-service   NodePort   10.108.162.148   <none>        80:32765/TCP   11s
-```
-
-In this case the service is running on port 32765. The only thing we need to do
-now is get the IP of the minikube.
-
-```
-minikube ip
-```
-
-The output of this commando is the IP of your minikube. Now browse to the following
-ip.
-
-```
-<minikube_ip>:<service_port>
+minikube service my-container-info-service -n lab-05-${USERNAME}
 ```
 
 When following these steps you are able to reach all the pods from the service.
