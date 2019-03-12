@@ -1,31 +1,37 @@
-# Lab 07 - Config Maps & Secrets
+# Lab 07 - Services
 
-## Task 1: Create a configmap
+A Kubernetes Service is an abstraction which defines a logical set of Pods and a
+policy by which to access them - sometimes called a micro-service. The set of
+Pods targeted by a Service is (usually) determined by a Label Selector.
 
-With a configmap we are able to pass environment variables to the Deployment we
-are creating.
+As an example, consider an image-processing backend which is running with 3
+replicas. Those replicas are fungible - frontends do not care which backend they
+use. While the actual Pods that compose the backend set may change, the frontend
+clients should not need to be aware of that or keep track of the list of
+backends themselves. The Service abstraction enables this decoupling.
 
-Create a file `container-info.properties` with the following content :
-
-```
-# container-info.properties
-
-IMAGE_COLOR=green
-```
-
-This will pass an environment variable to the pod. We are now able to create
-a configmap with this file.
+To make copy/pasting easier we will again export our username first:
 
 ```
-kubectl create configmap container-info-env --from-env-file='./container-info.properties'
+export USERNAME=<username>
 ```
 
-## Task 2: Add the configmap in the deployment.
+## Task 1: Creating your first service
 
-We will use the deployment from our previous labs. With some extra parameters
-to include the configmap.
+Before we can create our service we will first have to create our namespace and
+our deployment (with 3 replica's):
 
 ```
+cat <<EOF | kubectl create -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lab-07-${USERNAME}
+EOF
+```
+
+```
+cat <<EOF | kubectl create -n lab-07-${USERNAME} -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -33,7 +39,7 @@ metadata:
   labels:
     app: container-info
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: container-info
@@ -47,31 +53,73 @@ spec:
         image: gluobe/container-info:blue
         ports:
         - containerPort: 80
-        envFrom:
-          - configMapRef:
-              name: container-info-env
-```     
-Copy the above into a file lab-07-deployment.yml
-
-Now we create the new deployment with our environment variables.
-
-```
-kubectl create ns lab-07-${USERNAME}
-kubectl apply -f lab-07-deployment.yml -n lab-07-${USERNAME}
+EOF
 ```
 
-We will expose the service again.
+Verfiy that this is working:
 
 ```
-kubectl expose deployment container-info --type=NodePort --name=my-container-info-service
--n lab-07-${USERNAME}
+kubectl get pods -n lab-07-${USERNAME}
+
+NAME                              READY     STATUS    RESTARTS   AGE
+container-info-5998b79944-gh57z   1/1       Running   0          21s
+container-info-5998b79944-t4h6n   1/1       Running   0          21s
+container-info-5998b79944-vkmcg   1/1       Running   0          21s
 ```
 
-And connect to the service in the browser.
+Now create the service:
 
 ```
-minikube service my-container-info-service -n lab-07-${USERNAME}
+cat <<EOF | kubectl create -n lab-07-${USERNAME} -f -
+kind: Service
+apiVersion: v1
+metadata:
+  name: container-info
+spec:
+  selector:
+    app: container-info
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+EOF
 ```
 
+Check that the service has been created:
 
-TODO  --> Create a new application for the environment var? Tweak above ymls if necessary. 
+```
+kubectl get svc -n lab-07-${USERNAME}
+
+NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+container-info   ClusterIP   10.27.247.106   <none>        80/TCP    7m
+```
+
+## Task 2: Inspecting your first service
+
+To see more information about the service we can again use the
+`kubectl describe` command:
+
+```
+kubectl describe service container-info -n lab-07-${USERNAME}
+
+Name:              container-info
+Namespace:         lab-07-trescst
+Labels:            <none>
+Annotations:       <none>
+Selector:          app=container-info
+Type:              ClusterIP
+IP:                10.27.247.106
+Port:              <unset>  80/TCP
+TargetPort:        80/TCP
+Endpoints:         10.24.0.15:80,10.24.1.13:80,10.24.2.19:80
+Session Affinity:  None
+Events:            <none>
+```
+
+From the output you can see that a service looks a lot like a loadbalancer, you
+can see the VIP (ClusterIP) and the different backends (Endpoints).
+
+## Task 3: Cleaning up
+
+Clean up any namespaces you might have created during this lab:
+`kubectl delete ns ...`

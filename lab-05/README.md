@@ -1,151 +1,103 @@
-# Lab 05 - Deployments
+# Lab 05 - YAML
 
-Deploying pods is not something you normally do when working with Kubernetes,
-instead of interacting with pods directly you would use a higher lever
-construct.  Deployments are such a higher level construct, they are usually the
-way you would describe your applications.
+Although relatively easy in concept, this lab is very important when working
+with Kubernetes.  In this lab we introduce YAML as a way to describe objects in
+Kubernetes.
 
-To make copy/pasting easier we will again export our username first:
+If you are not very familiar with YAML check out the website below for a basic
+introduction and its relevance for Kubernetes and other opensource projects:
+https://www.mirantis.com/blog/introduction-to-yaml-creating-a-kubernetes-deployment/
+
+## Task 1: Creating objects using YAML
+
+In the previous labs we have used `kubectl create namespace` to create a
+namespace object in Kubernetes, instead we could (and probably should) have also
+used YAML.  So what would this look like?
+
+The YAML code to replace `kubectl create namespace lab-05-<username>` looks like
+this:
 
 ```
-export USERNAME=<username>
-```
-
-## Task 1: Creating a deployment
-
-A basic deployment looks like this:
-
-```
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Namespace
 metadata:
-  name: container-info
-  labels:
-    app: container-info
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: container-info
-  template:
-    metadata:
-      labels:
-        app: container-info
-    spec:
-      containers:
-      - name: container-info
-        image: gluobe/container-info:blue
-        ports:
-        - containerPort: 80
+  name: lab-05-<username>
 ```
 
-Copy the above into a file `lab-05-deployment.yml` and `kubectl apply` it (we
-will create a new namespace first):
+To create the object in Kubernetes simply copy the above content into a file,
+for example `lab-05-namespace.yml`.  After that simply issue the following
+commmand:
 
 ```
-kubectl create ns lab-05-${USERNAME}
-kubectl apply -f lab-05-deployment.yml -n lab-05-${USERNAME}
+kubectl apply -f lab-05-namespace.yml
 ```
 
-Use `kubectl port-forward` to see the deployed application in your local
-browser:
+## Task 2: Deleting objects using YAML
+
+Deleting an object is even easier, only requirement is that you have the orignal
+YAML file at your disposal:
 
 ```
-kubectl port-forward container-info 8080:80 -n lab-05-${USERNAME}
+kubectl delete -f lab-05-namespace.yml
 ```
 
-Check out the page: http://localhost:8080
+## Task 3: Multiple objects
 
-Kill the `kubectl port-forward` process by pressing `CTRL+c`.
+When you have multiple objects you have different options:
+* you can put multiple objects in the same YAML (using lists)
+* you can have multiple YAML files inside a directory and `kubectl apply` the
+directory (for example: `kubectl apply -f directory_full_of_yaml/`)
 
-## Task 2: Scaling a deployment
+## Task 4: YAML and namespaces
 
-Because we are using a deployment we can very easily scale our application from
-a Kubernetes point of view (you of course need to ensure that your application
-is stateless so it can properly scale).
+When working with YAML you can use namespaces in different ways:
+* metadata in YAML
+* option on the command line
 
-Scaling your running application is as simple as:
-
-```
-kubectl scale deployment container-info --replicas=3 -n lab-05-${USERNAME}
-
-deployment.extensions "container-info" scaled
-```
-
-When you do a `kubectl get pods -n lab-05-${USERNAME}` you will see that there
-are 2 additional container-info pods being started.
-
-Scaling down to 1 can be done by re-applying the original YAML:
+When working with metadata your YAML will look like this:
 
 ```
-kubectl apply -f lab-05-deployment.yml -n lab-05-${USERNAME}
-```
-
-When you do a `kubectl get pods -n lab-05-${USERNAME}` you will see 2 pods are
-being terminated.
-
-> NOTE: scaling up can also be done by editing the "replica" field in the YAML
-
-## Task 3: Exposing the deployment via a service
-
-When our deployment consists of multiple pods we can't use the port-forward to
-reach all pods. In this scenario we will have to create a service and expose
-this service.
-
-In lab-06 we will dig deeper in creating a service. For now just follow these commands.
-
-```
-kubectl expose deployment container-info --type=NodePort --name=my-container-info-service
--n lab-05-${USERNAME}
-```
-
-Our service is exposed now. Let's go find the port where it is running on. We
-will be able to open te service in your default browser with the following command.
-
-```
-minikube service my-container-info-service -n lab-05-${USERNAME}
-```
-
-When following these steps you are able to reach all the pods from the service.
-As said before, we will dig deeper into creating these services in the next lab.
-
-## Task 4: Changing the image of a deployment
-
-Updating the image (tag) of a deployment is just as easy as scaling a deployment
-and it also can be done using the CLI or by editing the YAML.
-
-```
-kubectl set image deployment container-info containerinfo=gluobe/container-info:green
--n lab-05-${USERNAME}
-```
-
-Or simply edit the YAML and `kubectl apply` it again:
-
-```
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Pod
 metadata:
-  name: container-info
-  labels:
-    app: container-info
+  name: nginx
+  namespace: lab-05-<username>
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: container-info
-  template:
-    metadata:
-      labels:
-        app: container-info
-    spec:
-      containers:
-      - name: container-info
-        image: gluobe/container-info:green
-        ports:
-        - containerPort: 80
+  containers:
+  - name: nginx
+    image: nginx
 ```
 
-## Task 4: Cleaning up
+You will create the object using:
+
+```
+kubectl apply -f lab-05-metadata_namespace.yml
+```
+
+Or you can omit the namespace in the metadata and provide it at the command
+line:
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  namespace: lab-05-<username>
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+```
+
+In this case you will create the object using:
+
+```
+kubectl apply -f lab-05-without_metadata_namespace.yml -n lab-05-<username>
+```
+
+Both options have their specific use-cases.
+
+## Task 5: Cleaning up
 
 Clean up any namespaces you might have created during this lab:
 `kubectl delete ns ...`

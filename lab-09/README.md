@@ -1,7 +1,3 @@
-# Lab 09 - Deployments (more advanced topics)
+# Lab 09 - Persistent Volumes
 
 TODO
-* list
-* green/blue
-* liveness/readiness
-* node labeling (affinity, anti-affinity, taints,...)
