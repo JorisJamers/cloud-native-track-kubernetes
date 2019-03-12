@@ -1,7 +1,7 @@
 # Lab 03 - Pods
 
 In this lab we will run our first, very basic, application on Kubernetes.  We 
-will basically simply run a single pod as our application.
+will basically run a single pod as our application.
 
 To make copy/pasting easier we will again export our username first:
 
@@ -40,10 +40,10 @@ kubectl run --generator=run-pod/v1 --image=nginx nginx -n lab-03-${USERNAME}
 pod "nginx" created
 ```
 
-The above command will run a single pod that is based on the official nginx 
+The above command will create a single pod that is based on the official nginx 
 Docker image.  Run the following command to verify that the pods has been 
 created and is in the running state (if the pod is not yet in the running state 
-wait a couple of seconds and try to issue the command again):
+wait a couple of seconds and try to run the command again):
 
 ```
 kubectl get pods -n lab-03-${USERNAME}
@@ -80,8 +80,8 @@ root@nginx:/#
 ```
 
 Notice how the prompt changes.  `exec`-ing into a pod is very powerful for 
-troubleshooting, but keep in mind that by defaults pods/containers are immutable 
-so do not make any changes inside the pods/container.
+troubleshooting, but keep in mind that by default pods/containers are immutable 
+so remember to not make any changes inside the pods/container.
 
 To exit run the `exit` command.
 

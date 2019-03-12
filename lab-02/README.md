@@ -3,13 +3,19 @@
 Kubernetes supports multiple virtual clusters backed by the same physical 
 cluster. These virtual clusters are called namespaces.
 
-Namespace make it possible to run different environments on a single Kubernetes 
-cluster, such as DEV, TST and UAT.  Also, different access controls can be set 
-per namespace.
+Namespaces make it possible to run different environments on a single Kubernetes 
+cluster, such as DEV, TST and UAT.  Namespace can also be used to set different 
+access controls per namespace.
 
 Most objects in Kubernetes can be namespaced (pods, services, pvc,...), keep in 
-mind that some objects however cannot be namespaced and are cluster-wide (pv for 
-example).
+mind however that some objects however cannot be namespaced and are cluster-wide 
+(pv for example).
+
+To make copy/pasting easier we will again export our username first:
+
+```
+export USERNAME=<username>
+```
 
 ## Task 1: Listing namespaces
 
@@ -17,6 +23,7 @@ To see which namespaces are available use the `kubectl get namespaces` command:
 
 ```
 kubectl get namespaces
+
 NAME          STATUS    AGE
 default       Active    40m
 kube-public   Active    40m
@@ -25,10 +32,10 @@ kube-system   Active    40m
 
 ## Task 2: Creating a new namespace
 
-Creating a namespace is easy, `kubectl create namespace test-<username>`:
+Creating a namespace is easy, `kubectl create namespace test-${USERNAME}`:
 
 ```
-kubectl create namespace test-trescst
+kubectl create namespace test-${USERNAME}
 
 namespace "test-trescst" created
 ```
@@ -46,9 +53,9 @@ test-trescst   Active    1m
 ```
 
 > NOTE: as you can see we abreviated `namespace` to `ns`, most of the objects in 
-> Kubernetes have abreviations to use on the command line
+> Kubernetes have abreviations that you can use on the command line
 
-## Task 3: Specifing namespaces
+## Task 3: Specifying namespaces
 
 When working with namespaces it is important to know that if you do not specify 
 a specific namepace when issuing a `kubectl` command the default namespace of 
@@ -64,7 +71,7 @@ NAME                 TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
 service/kubernetes   ClusterIP   10.27.240.1   <none>        443/TCP   53m
 ```
 
-Is exactly the same as:
+Is exactly the same as running:
 
 ```
 kubectl get all -n default
@@ -153,12 +160,12 @@ test          hello-world                                            1/1       R
 
 ## Task 5: Deleting namespaces
 
-Deleting a namespace is easy, keep in mind however that when you delete a 
+Deleting a namespace is very easy, keep in mind however that when you delete a 
 namespace *all* the objects in that namespace will be deleten.  So always verify 
 that all the objects in that namespace can be deleted:
 
 ```
-kubectl delete ns test-trescst
+kubectl delete ns test-${USERNAME}
 
 namespace "test-trescst" deleted
 ```
