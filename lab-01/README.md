@@ -135,5 +135,6 @@ Read through the output above to see all the information that is available about
 the node.
 
 The `kubectl describe node <node_name>` is a very useful tool when 
-troubleshooting a node that is failing.  Going through the output will give a 
-good indication why the node is not behaving as it should.
+troubleshooting a node that is failing.  Going through the output will, in 
+almost all cases, give a  good indication why the node is not behaving as it 
+should.
