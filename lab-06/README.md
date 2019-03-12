@@ -1,14 +1,9 @@
-# Lab 06 - Services
+# Lab 06 - Deployments
 
-A Kubernetes Service is an abstraction which defines a logical set of Pods and a 
-policy by which to access them - sometimes called a micro-service. The set of 
-Pods targeted by a Service is (usually) determined by a Label Selector.
-
-As an example, consider an image-processing backend which is running with 3 
-replicas. Those replicas are fungible - frontends do not care which backend they 
-use. While the actual Pods that compose the backend set may change, the frontend 
-clients should not need to be aware of that or keep track of the list of 
-backends themselves. The Service abstraction enables this decoupling.
+Deploying pods is not something you normally do when working with Kubernetes,
+instead of interacting with pods directly you would use a higher lever
+construct.  Deployments are such a higher level construct, they are usually the
+way you would describe your applications.
 
 To make copy/pasting easier we will again export our username first:
 
@@ -16,22 +11,11 @@ To make copy/pasting easier we will again export our username first:
 export USERNAME=<username>
 ```
 
-## Task 1: Creating your first service
+## Task 1: Creating a deployment
 
-Before we can create our service we will first have to create our namespace and 
-our deployment (with 3 replica's):
-
-```
-cat <<EOF | kubectl create -f -
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: lab-06-${USERNAME}
-EOF
-```
+A basic deployment looks like this:
 
 ```
-cat <<EOF | kubectl create -n lab-06-${USERNAME} -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -39,7 +23,7 @@ metadata:
   labels:
     app: container-info
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: container-info
@@ -53,73 +37,115 @@ spec:
         image: gluobe/container-info:blue
         ports:
         - containerPort: 80
-EOF
 ```
 
-Verfiy that this is working:
+Copy the above into a file `lab-06-deployment.yml` and `kubectl apply` it (we
+will create a new namespace first):
 
 ```
-kubectl get pods -n lab-06-${USERNAME}
-
-NAME                              READY     STATUS    RESTARTS   AGE
-container-info-5998b79944-gh57z   1/1       Running   0          21s
-container-info-5998b79944-t4h6n   1/1       Running   0          21s
-container-info-5998b79944-vkmcg   1/1       Running   0          21s
+kubectl create ns lab-06-${USERNAME}
+kubectl apply -f lab-06-deployment.yml -n lab-06-${USERNAME}
 ```
 
-Now create the service:
+Use `kubectl port-forward` to see the deployed application in your local
+browser:
 
 ```
-cat <<EOF | kubectl create -n lab-06-${USERNAME} -f -
-kind: Service
-apiVersion: v1
+kubectl port-forward container-info 8080:80 -n lab-06-${USERNAME}
+```
+
+Check out the page: http://localhost:8080
+
+Kill the `kubectl port-forward` process by pressing `CTRL+c`.
+
+## Task 2: Scaling a deployment
+
+Because we are using a deployment we can very easily scale our application from
+a Kubernetes point of view (you of course need to ensure that your application
+is stateless so it can properly scale).
+
+Scaling your running application is as simple as:
+
+```
+kubectl scale deployment container-info --replicas=3 -n lab-06-${USERNAME}
+
+deployment.extensions "container-info" scaled
+```
+
+When you do a `kubectl get pods -n lab-06-${USERNAME}` you will see that there
+are 2 additional container-info pods being started.
+
+Scaling down to 1 can be done by re-applying the original YAML:
+
+```
+kubectl apply -f lab-06-deployment.yml -n lab-06-${USERNAME}
+```
+
+When you do a `kubectl get pods -n lab-06-${USERNAME}` you will see 2 pods are
+being terminated.
+
+> NOTE: scaling up can also be done by editing the "replica" field in the YAML
+
+## Task 3: Exposing the deployment via a service
+
+When our deployment consists of multiple pods we can't use the port-forward to
+reach all pods. In this scenario we will have to create a service and expose
+this service.
+
+In lab-06 we will dig deeper in creating a service. For now just follow these commands.
+
+```
+kubectl expose deployment container-info --type=NodePort --name=my-container-info-service
+-n lab-06-${USERNAME}
+```
+
+Our service is exposed now. Let's go find the port where it is running on. We
+will be able to open te service in your default browser with the following command.
+
+```
+minikube service my-container-info-service -n lab-06-${USERNAME}
+```
+
+When following these steps you are able to reach all the pods from the service.
+As said before, we will dig deeper into creating these services in the next lab.
+
+## Task 4: Changing the image of a deployment
+
+Updating the image (tag) of a deployment is just as easy as scaling a deployment
+and it also can be done using the CLI or by editing the YAML.
+
+```
+kubectl set image deployment container-info containerinfo=gluobe/container-info:green
+-n lab-06-${USERNAME}
+```
+
+Or simply edit the YAML and `kubectl apply` it again:
+
+```
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: container-info
-spec:
-  selector:
+  labels:
     app: container-info
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 80
-EOF
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: container-info
+  template:
+    metadata:
+      labels:
+        app: container-info
+    spec:
+      containers:
+      - name: container-info
+        image: gluobe/container-info:green
+        ports:
+        - containerPort: 80
 ```
 
-Check that the service has been created:
+## Task 4: Cleaning up
 
-```
-kubectl get svc -n lab-06-${USERNAME}
-
-NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
-container-info   ClusterIP   10.27.247.106   <none>        80/TCP    7m
-```
-
-## Task 2: Inspecting your first service
-
-To see more information about the service we can again use the 
-`kubectl describe` command:
-
-```
-kubectl describe service container-info -n lab-06-${USERNAME}
-
-Name:              container-info
-Namespace:         lab-06-trescst
-Labels:            <none>
-Annotations:       <none>
-Selector:          app=container-info
-Type:              ClusterIP
-IP:                10.27.247.106
-Port:              <unset>  80/TCP
-TargetPort:        80/TCP
-Endpoints:         10.24.0.15:80,10.24.1.13:80,10.24.2.19:80
-Session Affinity:  None
-Events:            <none>
-```
-
-From the output you can see that a service looks a lot like a loadbalancer, you 
-can see the VIP (ClusterIP) and the different backends (Endpoints).
-
-## Task 3: Cleaning up
-
-Clean up any namespaces you might have created during this lab: 
+Clean up any namespaces you might have created during this lab:
 `kubectl delete ns ...`

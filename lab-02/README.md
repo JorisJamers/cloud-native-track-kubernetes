@@ -1,171 +1,140 @@
-# Lab 02 - Namespaces
+# Lab 02 - Nodes
 
-Kubernetes supports multiple virtual clusters backed by the same physical 
-cluster. These virtual clusters are called namespaces.
+A node is a worker machine in Kubernetes, previously known as a minion. A node
+may be a VM or physical machine, depending on the cluster. Each node contains
+the services necessary to run pods and is managed by the master components. The
+services on a node include the container runtime, kubelet and kube-proxy.
 
-Namespaces make it possible to run different environments on a single Kubernetes 
-cluster, such as DEV, TST and UAT.  Namespace can also be used to set different 
-access controls per namespace.
+## Task 1: Listing nodes
 
-Most objects in Kubernetes can be namespaced (pods, services, pvc,...), keep in 
-mind however that some objects however cannot be namespaced and are cluster-wide 
-(pv for example).
-
-To make copy/pasting easier we will again export our username first:
+To see which nodes are part of your Kubernetes cluster run the
+`kubectl get nodes` command:
 
 ```
-export USERNAME=<username>
+kubectl get nodes
+
+NAME                                        STATUS    ROLES     AGE       VERSION
+gke-kbc-steven-default-pool-b82ee1c9-5n9j   Ready     <none>    20m       v1.11.7-gke.4
+gke-kbc-steven-default-pool-b82ee1c9-6wnx   Ready     <none>    20m       v1.11.7-gke.4
+gke-kbc-steven-default-pool-b82ee1c9-x13z   Ready     <none>    20m       v1.11.7-gke.4
 ```
 
-## Task 1: Listing namespaces
-
-To see which namespaces are available use the `kubectl get namespaces` command:
-
-```
-kubectl get namespaces
-
-NAME          STATUS    AGE
-default       Active    40m
-kube-public   Active    40m
-kube-system   Active    40m
-```
-
-## Task 2: Creating a new namespace
-
-Creating a namespace is easy, `kubectl create namespace test-${USERNAME}`:
+We can use the `kubectl get nodes -o wide` command to get some additional
+information about the nodes:
 
 ```
-kubectl create namespace test-${USERNAME}
-
-namespace "test-trescst" created
+kubectl get nodes -o wide
+NAME                                        STATUS    ROLES     AGE       VERSION         EXTERNAL-IP     OS-IMAGE                             KERNEL-VERSION   CONTAINER-RUNTIME
+gke-kbc-steven-default-pool-b82ee1c9-5n9j   Ready     <none>    21m       v1.11.7-gke.4   35.188.203.43   Container-Optimized OS from Google   4.14.89+         docker://17.3.2
+gke-kbc-steven-default-pool-b82ee1c9-6wnx   Ready     <none>    21m       v1.11.7-gke.4   35.192.143.33   Container-Optimized OS from Google   4.14.89+         docker://17.3.2
+gke-kbc-steven-default-pool-b82ee1c9-x13z   Ready     <none>    21m       v1.11.7-gke.4   23.251.156.4    Container-Optimized OS from Google   4.14.89+         docker://17.3.2
 ```
 
-Check that your namespace has been created:
+## Task 2: Getting detailed node information
+
+If we want more detailed information about a node we have to use the
+`kubectl describe node <node_name>` command:
 
 ```
-kubectl get ns
+kubectl describe node gke-kbc-steven-default-pool-b82ee1c9-5n9j
 
-NAME           STATUS    AGE
-default        Active    45m
-kube-public    Active    45m
-kube-system    Active    45m
-test-trescst   Active    1m
+Name:               gke-kbc-steven-default-pool-b82ee1c9-5n9j
+Roles:              <none>
+Labels:             beta.kubernetes.io/arch=amd64
+                    beta.kubernetes.io/fluentd-ds-ready=true
+                    beta.kubernetes.io/instance-type=n1-standard-1
+                    beta.kubernetes.io/os=linux
+                    cloud.google.com/gke-nodepool=default-pool
+                    cloud.google.com/gke-os-distribution=cos
+                    failure-domain.beta.kubernetes.io/region=us-central1
+                    failure-domain.beta.kubernetes.io/zone=us-central1-a
+                    kubernetes.io/hostname=gke-kbc-steven-default-pool-b82ee1c9-5n9j
+Annotations:        container.googleapis.com/instance_id=2496827992163718317
+                    node.alpha.kubernetes.io/ttl=0
+                    volumes.kubernetes.io/controller-managed-attach-detach=true
+CreationTimestamp:  Mon, 11 Mar 2019 10:30:17 +0100
+Taints:             <none>
+Unschedulable:      false
+Conditions:
+  Type                          Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----                          ------  -----------------                 ------------------                ------                       -------
+  FrequentKubeletRestart        False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:33:53 +0100   FrequentKubeletRestart       kubelet is functioning properly
+  FrequentDockerRestart         False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:33:54 +0100   FrequentDockerRestart        docker is functioning properly
+  FrequentContainerdRestart     False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:33:55 +0100   FrequentContainerdRestart    containerd is functioning properly
+  CorruptDockerOverlay2         False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:33:53 +0100   CorruptDockerOverlay2        docker overlay2 is functioning properly
+  KernelDeadlock                False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:28:52 +0100   KernelHasNoDeadlock          kernel has no deadlock
+  ReadonlyFilesystem            False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:28:52 +0100   FilesystemIsNotReadOnly      Filesystem is not read-only
+  FrequentUnregisterNetDevice   False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:33:53 +0100   UnregisterNetDevice          node is functioning properly
+  NetworkUnavailable            False   Mon, 11 Mar 2019 10:30:29 +0100   Mon, 11 Mar 2019 10:30:29 +0100   RouteCreated                 RouteController created a route
+  OutOfDisk                     False   Mon, 11 Mar 2019 11:01:32 +0100   Mon, 11 Mar 2019 10:30:17 +0100   KubeletHasSufficientDisk     kubelet has sufficient disk space available
+  MemoryPressure                False   Mon, 11 Mar 2019 11:01:32 +0100   Mon, 11 Mar 2019 10:30:17 +0100   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure                  False   Mon, 11 Mar 2019 11:01:32 +0100   Mon, 11 Mar 2019 10:30:17 +0100   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure                   False   Mon, 11 Mar 2019 11:01:32 +0100   Mon, 11 Mar 2019 10:30:17 +0100   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready                         True    Mon, 11 Mar 2019 11:01:32 +0100   Mon, 11 Mar 2019 10:30:37 +0100   KubeletReady                 kubelet is posting ready status. AppArmor enabled
+Addresses:
+  InternalIP:  10.128.0.37
+  ExternalIP:  35.188.203.43
+  Hostname:    gke-kbc-steven-default-pool-b82ee1c9-5n9j
+Capacity:
+ cpu:                1
+ ephemeral-storage:  98868448Ki
+ hugepages-2Mi:      0
+ memory:             3787656Ki
+ pods:               110
+Allocatable:
+ cpu:                940m
+ ephemeral-storage:  47093746742
+ hugepages-2Mi:      0
+ memory:             2702216Ki
+ pods:               110
+System Info:
+ Machine ID:                 6ea81fc2b497faf269c516c42061b928
+ System UUID:                6EA81FC2-B497-FAF2-69C5-16C42061B928
+ Boot ID:                    fcf8db1e-f20a-47af-933d-7886cbfa3fa3
+ Kernel Version:             4.14.89+
+ OS Image:                   Container-Optimized OS from Google
+ Operating System:           linux
+ Architecture:               amd64
+ Container Runtime Version:  docker://17.3.2
+ Kubelet Version:            v1.11.7-gke.4
+ Kube-Proxy Version:         v1.11.7-gke.4
+PodCIDR:                     10.24.1.0/24
+ExternalID:                  gke-kbc-steven-default-pool-b82ee1c9-5n9j
+ProviderID:                  gce://certain-nexus-865/us-central1-a/gke-kbc-steven-default-pool-b82ee1c9-5n9j
+Non-terminated Pods:         (4 in total)
+  Namespace                  Name                                                    CPU Requests  CPU Limits  Memory Requests  Memory Limits
+  ---------                  ----                                                    ------------  ----------  ---------------  -------------
+  kube-system                fluentd-gcp-v3.2.0-st25d                                100m (10%)    1 (106%)    200Mi (7%)       500Mi (18%)
+  kube-system                heapster-v1.6.0-beta.1-575d556fcd-dxfz6                 138m (14%)    138m (14%)  301856Ki (11%)   301856Ki (11%)
+  kube-system                kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-5n9j    100m (10%)    0 (0%)      0 (0%)           0 (0%)
+  kube-system                metrics-server-v0.2.1-fd596d746-5qpdw                   53m (5%)      148m (15%)  154Mi (5%)       404Mi (15%)
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  CPU Requests  CPU Limits    Memory Requests  Memory Limits
+  ------------  ----------    ---------------  -------------
+  391m (41%)    1286m (136%)  664352Ki (24%)   1227552Ki (45%)
+Events:
+  Type    Reason                     Age                From                                                        Message
+  ----    ------                     ----               ----                                                        -------
+  Normal  Starting                   31m                kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Starting kubelet.
+  Normal  NodeHasSufficientDisk      31m (x2 over 31m)  kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Node gke-kbc-steven-default-pool-b82ee1c9-5n9j status is now: NodeHasSufficientDisk
+  Normal  NodeHasSufficientMemory    31m (x2 over 31m)  kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Node gke-kbc-steven-default-pool-b82ee1c9-5n9j status is now: NodeHasSufficientMemory
+  Normal  NodeHasNoDiskPressure      31m (x2 over 31m)  kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Node gke-kbc-steven-default-pool-b82ee1c9-5n9j status is now: NodeHasNoDiskPressure
+  Normal  NodeHasSufficientPID       31m (x2 over 31m)  kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Node gke-kbc-steven-default-pool-b82ee1c9-5n9j status is now: NodeHasSufficientPID
+  Normal  NodeAllocatableEnforced    31m                kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Updated Node Allocatable limit across pods
+  Normal  NodeReady                  30m                kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Node gke-kbc-steven-default-pool-b82ee1c9-5n9j status is now: NodeReady
+  Normal  Starting                   30m                kube-proxy, gke-kbc-steven-default-pool-b82ee1c9-5n9j       Starting kube-proxy.
+  Normal  FrequentKubeletRestart     27m                systemd-monitor, gke-kbc-steven-default-pool-b82ee1c9-5n9j  Node condition FrequentKubeletRestart is now: False, reason: FrequentKubeletRestart
+  Normal  CorruptDockerOverlay2      27m                docker-monitor, gke-kbc-steven-default-pool-b82ee1c9-5n9j   Node condition CorruptDockerOverlay2 is now: False, reason: CorruptDockerOverlay2
+  Normal  UnregisterNetDevice        27m                kernel-monitor, gke-kbc-steven-default-pool-b82ee1c9-5n9j   Node condition FrequentUnregisterNetDevice is now: False, reason: UnregisterNetDevice
+  Normal  FrequentDockerRestart      27m                systemd-monitor, gke-kbc-steven-default-pool-b82ee1c9-5n9j  Node condition FrequentDockerRestart is now: False, reason: FrequentDockerRestart
+  Normal  FrequentContainerdRestart  27m                systemd-monitor, gke-kbc-steven-default-pool-b82ee1c9-5n9j  Node condition FrequentContainerdRestart is now: False, reason: FrequentContainerdRestart
 ```
 
-> NOTE: as you can see we abreviated `namespace` to `ns`, most of the objects in 
-> Kubernetes have abreviations that you can use on the command line
+Read through the output above to see all the information that is available about
+the node.
 
-## Task 3: Specifying namespaces
-
-When working with namespaces it is important to know that if you do not specify 
-a specific namepace when issuing a `kubectl` command the default namespace of 
-your current context is assumed.  In our case this will be `default` but you can 
-of course create new and/or customize your context.
-
-This means that running the following command:
-
-```
-kubectl get all
-
-NAME                 TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
-service/kubernetes   ClusterIP   10.27.240.1   <none>        443/TCP   53m
-```
-
-Is exactly the same as running:
-
-```
-kubectl get all -n default
-
-NAME                 TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
-service/kubernetes   ClusterIP   10.27.240.1   <none>        443/TCP   53m
-```
-
-But if we do this for a different namespace we of course get a completely 
-different result:
-
-```
-kubectl get all -n kube-system
-NAME                                                       READY     STATUS    RESTARTS   AGE
-pod/event-exporter-v0.2.3-85644fcdf-brk52                  2/2       Running   0          55m
-pod/fluentd-gcp-scaler-8b674f786-6wt6v                     1/1       Running   0          55m
-pod/fluentd-gcp-v3.2.0-gb9qz                               2/2       Running   0          54m
-pod/fluentd-gcp-v3.2.0-hmbnp                               2/2       Running   0          54m
-pod/fluentd-gcp-v3.2.0-st25d                               2/2       Running   0          54m
-pod/heapster-v1.6.0-beta.1-575d556fcd-dxfz6                3/3       Running   0          54m
-pod/kube-dns-7df4cb66cb-5tn89                              4/4       Running   0          55m
-pod/kube-dns-7df4cb66cb-c52g6                              4/4       Running   0          55m
-pod/kube-dns-autoscaler-67c97c87fb-xp9xt                   1/1       Running   0          55m
-pod/kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-5n9j   1/1       Running   0          55m
-pod/kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-6wnx   1/1       Running   0          55m
-pod/kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-x13z   1/1       Running   0          55m
-pod/l7-default-backend-7ff48cffd7-w4nrz                    1/1       Running   0          55m
-pod/metrics-server-v0.2.1-fd596d746-5qpdw                  2/2       Running   0          54m
-NAME                           TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)         AGE
-service/default-http-backend   NodePort    10.27.243.2    <none>        80:31515/TCP    55m
-service/heapster               ClusterIP   10.27.246.39   <none>        80/TCP          55m
-service/kube-dns               ClusterIP   10.27.240.10   <none>        53/UDP,53/TCP   55m
-service/metrics-server         ClusterIP   10.27.255.78   <none>        443/TCP         55m
-NAME                                      DESIRED   CURRENT   READY     UP-TO-DATE   AVAILABLE   NODE SELECTOR                                  AGE
-daemonset.apps/fluentd-gcp-v3.2.0         3         3         3         3            3           beta.kubernetes.io/fluentd-ds-ready=true       55m
-daemonset.apps/metadata-proxy-v0.1        0         0         0         0            0           beta.kubernetes.io/metadata-proxy-ready=true   55m
-daemonset.apps/nvidia-gpu-device-plugin   0         0         0         0            0           <none>                                         55m
-NAME                                     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/event-exporter-v0.2.3    1         1         1            1           55m
-deployment.apps/fluentd-gcp-scaler       1         1         1            1           55m
-deployment.apps/heapster-v1.6.0-beta.1   1         1         1            1           55m
-deployment.apps/kube-dns                 2         2         2            2           55m
-deployment.apps/kube-dns-autoscaler      1         1         1            1           55m
-deployment.apps/l7-default-backend       1         1         1            1           55m
-deployment.apps/metrics-server-v0.2.1    1         1         1            1           55m
-NAME                                                DESIRED   CURRENT   READY     AGE
-replicaset.apps/event-exporter-v0.2.3-85644fcdf     1         1         1         55m
-replicaset.apps/fluentd-gcp-scaler-8b674f786        1         1         1         55m
-replicaset.apps/heapster-v1.6.0-beta.1-575d556fcd   1         1         1         54m
-replicaset.apps/heapster-v1.6.0-beta.1-7d4677f9c6   0         0         0         55m
-replicaset.apps/kube-dns-7df4cb66cb                 2         2         2         55m
-replicaset.apps/kube-dns-autoscaler-67c97c87fb      1         1         1         55m
-replicaset.apps/l7-default-backend-7ff48cffd7       1         1         1         55m
-replicaset.apps/metrics-server-v0.2.1-597c89dc98    0         0         0         55m
-replicaset.apps/metrics-server-v0.2.1-fd596d746     1         1         1         54m
-```
-
-## Task 4: All namespaces
-
-It could happen that you do not really know in which namespace a Kubernetes 
-object is running.  If that is the case you can always add the 
-`--all-namespaces` option to your command to list objects from all of the 
-namespaces.
-
-```
-kubectl get pods --all-namespaces
-
-NAMESPACE     NAME                                                   READY     STATUS    RESTARTS   AGE
-default       nginx                                                  1/1       Running   0          43m
-kube-system   event-exporter-v0.2.3-85644fcdf-brk52                  2/2       Running   0          2h
-kube-system   fluentd-gcp-scaler-8b674f786-6wt6v                     1/1       Running   0          2h
-kube-system   fluentd-gcp-v3.2.0-gb9qz                               2/2       Running   0          2h
-kube-system   fluentd-gcp-v3.2.0-hmbnp                               2/2       Running   0          2h
-kube-system   fluentd-gcp-v3.2.0-st25d                               2/2       Running   0          2h
-kube-system   heapster-v1.6.0-beta.1-575d556fcd-dxfz6                3/3       Running   0          2h
-kube-system   kube-dns-7df4cb66cb-5tn89                              4/4       Running   0          2h
-kube-system   kube-dns-7df4cb66cb-c52g6                              4/4       Running   0          2h
-kube-system   kube-dns-autoscaler-67c97c87fb-xp9xt                   1/1       Running   0          2h
-kube-system   kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-5n9j   1/1       Running   0          2h
-kube-system   kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-6wnx   1/1       Running   0          2h
-kube-system   kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-x13z   1/1       Running   0          2h
-kube-system   l7-default-backend-7ff48cffd7-w4nrz                    1/1       Running   0          2h
-kube-system   metrics-server-v0.2.1-fd596d746-5qpdw                  2/2       Running   0          2h
-test          hello-world                                            1/1       Running   0          1h
-```
-
-## Task 5: Deleting namespaces
-
-Deleting a namespace is very easy, keep in mind however that when you delete a 
-namespace *all* the objects in that namespace will be deleten.  So always verify 
-that all the objects in that namespace can be deleted:
-
-```
-kubectl delete ns test-${USERNAME}
-
-namespace "test-trescst" deleted
-```
+The `kubectl describe node <node_name>` is a very useful tool when
+troubleshooting a node that is failing.  Going through the output will, in
+almost all cases, give a  good indication why the node is not behaving as it
+should.

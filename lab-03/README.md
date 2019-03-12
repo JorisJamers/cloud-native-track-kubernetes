@@ -1,7 +1,15 @@
-# Lab 03 - Pods
+# Lab 03 - Namespaces
 
-In this lab we will run our first, very basic, application on Kubernetes.  We 
-will basically run a single pod as our application.
+Kubernetes supports multiple virtual clusters backed by the same physical
+cluster. These virtual clusters are called namespaces.
+
+Namespaces make it possible to run different environments on a single Kubernetes
+cluster, such as DEV, TST and UAT.  Namespace can also be used to set different
+access controls per namespace.
+
+Most objects in Kubernetes can be namespaced (pods, services, pvc,...), keep in
+mind however that some objects however cannot be namespaced and are cluster-wide
+(pv for example).
 
 To make copy/pasting easier we will again export our username first:
 
@@ -9,111 +17,155 @@ To make copy/pasting easier we will again export our username first:
 export USERNAME=<username>
 ```
 
-## Task 1: Creating a namespace
+## Task 1: Listing namespaces
 
-Before we start with this lab we will create a new namespace:
-
-```
-kubectl create namespace lab-03-${USERNAME}
-```
-
-Verify that your namespace was created:
+To see which namespaces are available use the `kubectl get namespaces` command:
 
 ```
 kubectl get namespaces
 
-NAME             STATUS    AGE
-default          Active    1h
-kube-public      Active    1h
-kube-system      Active    1h
-lab-03-trescst   Active    7s
+NAME          STATUS    AGE
+default       Active    40m
+kube-public   Active    40m
+kube-system   Active    40m
 ```
 
-## Task 2: Starting your first pod
+## Task 2: Creating a new namespace
 
-To run your first pod (the official nginx Docker image), run the following 
-command:
-
-```
-kubectl run --generator=run-pod/v1 --image=nginx nginx -n lab-03-${USERNAME}
-
-pod "nginx" created
-```
-
-The above command will create a single pod that is based on the official nginx 
-Docker image.  Run the following command to verify that the pods has been 
-created and is in the running state (if the pod is not yet in the running state 
-wait a couple of seconds and try to run the command again):
+Creating a namespace is easy, `kubectl create namespace test-${USERNAME}`:
 
 ```
-kubectl get pods -n lab-03-${USERNAME}
+kubectl create namespace test-${USERNAME}
 
-NAME      READY     STATUS    RESTARTS   AGE
-nginx     1/1       Running   0          22s
+namespace "test-trescst" created
 ```
 
-As we have not yet configured any services and/or ingresses we will use a litte 
-"hack" to access our pod we just created.
-
-Run the following command to forward the port of the pod (in our case port 80) 
-running in our Kubernetes cluster to a port on your laptop (in this case port 
-8080).
+Check that your namespace has been created:
 
 ```
-kubectl port-forward nginx 8080:80 -n lab-03-${USERNAME}
+kubectl get ns
+
+NAME           STATUS    AGE
+default        Active    45m
+kube-public    Active    45m
+kube-system    Active    45m
+test-trescst   Active    1m
 ```
 
-Now go to your browser and surf to http://localhost:8080, you should be greeted 
-with the default nginx welcome page.
+> NOTE: as you can see we abreviated `namespace` to `ns`, most of the objects in
+> Kubernetes have abreviations that you can use on the command line
 
-If that works you can close the port-foward connection by pressing `CTRL+c`.
+## Task 3: Specifying namespaces
 
-## Task 3: Connecting to your pod
+When working with namespaces it is important to know that if you do not specify
+a specific namepace when issuing a `kubectl` command the default namespace of
+your current context is assumed.  In our case this will be `default` but you can
+of course create new and/or customize your context.
 
-To connect to your pod, you can use the following command (notice how it 
-resembles the `docker exec` command):
-
-```
-kubectl exec -ti nginx bash -n lab-03-${USERNAME}
-
-root@nginx:/#
-```
-
-Notice how the prompt changes.  `exec`-ing into a pod is very powerful for 
-troubleshooting, but keep in mind that by default pods/containers are immutable 
-so remember to not make any changes inside the pods/container.
-
-To exit run the `exit` command.
-
-## Task 4: Pod logs
-
-Again similar to when working with Docker containers, Kubernetes has a built-in 
-feature that exposes all stdout/stderr output into logs.  To access those logs 
-issue the following command:
+This means that running the following command:
 
 ```
-kubectl logs nginx -n lab-03-${USERNAME}
+kubectl get all
 
-127.0.0.1 - - [11/Mar/2019:11:40:47 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
-127.0.0.1 - - [11/Mar/2019:11:40:48 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
-127.0.0.1 - - [11/Mar/2019:11:40:49 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
-127.0.0.1 - - [11/Mar/2019:11:40:50 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
+NAME                 TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.27.240.1   <none>        443/TCP   53m
 ```
 
-A very handy option of `kubectl logs` is that you can follow them using the `-f` 
-option, this is extremely useful when troubleshooting:
+Is exactly the same as running:
 
 ```
-kubectl logs nginx -n lab-03-${USERNAME} -f
+kubectl get all -n default
+
+NAME                 TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.27.240.1   <none>        443/TCP   53m
 ```
 
-Hit `CTRL+c` to exit the logs.
-
-## Task 5: Cleaning up
-
-Because we are working with namespaces it is very easy to clean everything up, 
-simple issue the command below:
+But if we do this for a different namespace we of course get a completely
+different result:
 
 ```
-kubectl delete namespace lab-03-${USERNAME}
+kubectl get all -n kube-system
+NAME                                                       READY     STATUS    RESTARTS   AGE
+pod/event-exporter-v0.2.3-85644fcdf-brk52                  2/2       Running   0          55m
+pod/fluentd-gcp-scaler-8b674f786-6wt6v                     1/1       Running   0          55m
+pod/fluentd-gcp-v3.2.0-gb9qz                               2/2       Running   0          54m
+pod/fluentd-gcp-v3.2.0-hmbnp                               2/2       Running   0          54m
+pod/fluentd-gcp-v3.2.0-st25d                               2/2       Running   0          54m
+pod/heapster-v1.6.0-beta.1-575d556fcd-dxfz6                3/3       Running   0          54m
+pod/kube-dns-7df4cb66cb-5tn89                              4/4       Running   0          55m
+pod/kube-dns-7df4cb66cb-c52g6                              4/4       Running   0          55m
+pod/kube-dns-autoscaler-67c97c87fb-xp9xt                   1/1       Running   0          55m
+pod/kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-5n9j   1/1       Running   0          55m
+pod/kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-6wnx   1/1       Running   0          55m
+pod/kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-x13z   1/1       Running   0          55m
+pod/l7-default-backend-7ff48cffd7-w4nrz                    1/1       Running   0          55m
+pod/metrics-server-v0.2.1-fd596d746-5qpdw                  2/2       Running   0          54m
+NAME                           TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)         AGE
+service/default-http-backend   NodePort    10.27.243.2    <none>        80:31515/TCP    55m
+service/heapster               ClusterIP   10.27.246.39   <none>        80/TCP          55m
+service/kube-dns               ClusterIP   10.27.240.10   <none>        53/UDP,53/TCP   55m
+service/metrics-server         ClusterIP   10.27.255.78   <none>        443/TCP         55m
+NAME                                      DESIRED   CURRENT   READY     UP-TO-DATE   AVAILABLE   NODE SELECTOR                                  AGE
+daemonset.apps/fluentd-gcp-v3.2.0         3         3         3         3            3           beta.kubernetes.io/fluentd-ds-ready=true       55m
+daemonset.apps/metadata-proxy-v0.1        0         0         0         0            0           beta.kubernetes.io/metadata-proxy-ready=true   55m
+daemonset.apps/nvidia-gpu-device-plugin   0         0         0         0            0           <none>                                         55m
+NAME                                     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/event-exporter-v0.2.3    1         1         1            1           55m
+deployment.apps/fluentd-gcp-scaler       1         1         1            1           55m
+deployment.apps/heapster-v1.6.0-beta.1   1         1         1            1           55m
+deployment.apps/kube-dns                 2         2         2            2           55m
+deployment.apps/kube-dns-autoscaler      1         1         1            1           55m
+deployment.apps/l7-default-backend       1         1         1            1           55m
+deployment.apps/metrics-server-v0.2.1    1         1         1            1           55m
+NAME                                                DESIRED   CURRENT   READY     AGE
+replicaset.apps/event-exporter-v0.2.3-85644fcdf     1         1         1         55m
+replicaset.apps/fluentd-gcp-scaler-8b674f786        1         1         1         55m
+replicaset.apps/heapster-v1.6.0-beta.1-575d556fcd   1         1         1         54m
+replicaset.apps/heapster-v1.6.0-beta.1-7d4677f9c6   0         0         0         55m
+replicaset.apps/kube-dns-7df4cb66cb                 2         2         2         55m
+replicaset.apps/kube-dns-autoscaler-67c97c87fb      1         1         1         55m
+replicaset.apps/l7-default-backend-7ff48cffd7       1         1         1         55m
+replicaset.apps/metrics-server-v0.2.1-597c89dc98    0         0         0         55m
+replicaset.apps/metrics-server-v0.2.1-fd596d746     1         1         1         54m
+```
+
+## Task 4: All namespaces
+
+It could happen that you do not really know in which namespace a Kubernetes
+object is running.  If that is the case you can always add the
+`--all-namespaces` option to your command to list objects from all of the
+namespaces.
+
+```
+kubectl get pods --all-namespaces
+
+NAMESPACE     NAME                                                   READY     STATUS    RESTARTS   AGE
+default       nginx                                                  1/1       Running   0          43m
+kube-system   event-exporter-v0.2.3-85644fcdf-brk52                  2/2       Running   0          2h
+kube-system   fluentd-gcp-scaler-8b674f786-6wt6v                     1/1       Running   0          2h
+kube-system   fluentd-gcp-v3.2.0-gb9qz                               2/2       Running   0          2h
+kube-system   fluentd-gcp-v3.2.0-hmbnp                               2/2       Running   0          2h
+kube-system   fluentd-gcp-v3.2.0-st25d                               2/2       Running   0          2h
+kube-system   heapster-v1.6.0-beta.1-575d556fcd-dxfz6                3/3       Running   0          2h
+kube-system   kube-dns-7df4cb66cb-5tn89                              4/4       Running   0          2h
+kube-system   kube-dns-7df4cb66cb-c52g6                              4/4       Running   0          2h
+kube-system   kube-dns-autoscaler-67c97c87fb-xp9xt                   1/1       Running   0          2h
+kube-system   kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-5n9j   1/1       Running   0          2h
+kube-system   kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-6wnx   1/1       Running   0          2h
+kube-system   kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-x13z   1/1       Running   0          2h
+kube-system   l7-default-backend-7ff48cffd7-w4nrz                    1/1       Running   0          2h
+kube-system   metrics-server-v0.2.1-fd596d746-5qpdw                  2/2       Running   0          2h
+test          hello-world                                            1/1       Running   0          1h
+```
+
+## Task 5: Deleting namespaces
+
+Deleting a namespace is very easy, keep in mind however that when you delete a
+namespace *all* the objects in that namespace will be deleten.  So always verify
+that all the objects in that namespace can be deleted:
+
+```
+kubectl delete ns test-${USERNAME}
+
+namespace "test-trescst" deleted
 ```

@@ -1,103 +1,119 @@
-# Lab 04 - YAML
+# Lab 04 - Pods
 
-Although relatively easy in concept, this lab is very important when working 
-with Kubernetes.  In this lab we introduce YAML as a way to describe objects in 
-Kubernetes.
+In this lab we will run our first, very basic, application on Kubernetes.  We
+will basically run a single pod as our application.
 
-If you are not very familiar with YAML check out the website below for a basic 
-introduction and its relevance for Kubernetes and other opensource projects:
-https://www.mirantis.com/blog/introduction-to-yaml-creating-a-kubernetes-deployment/
-
-## Task 1: Creating objects using YAML
-
-In the previous labs we have used `kubectl create namespace` to create a 
-namespace object in Kubernetes, instead we could (and probably should) have also 
-used YAML.  So what would this look like?
-
-The YAML code to replace `kubectl create namespace lab-04-<username>` looks like 
-this:
+To make copy/pasting easier we will again export our username first:
 
 ```
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: lab-04-<username>
+export USERNAME=<username>
 ```
 
-To create the object in Kubernetes simply copy the above content into a file, 
-for example `lab-04-namespace.yml`.  After that simply issue the following 
-commmand:
+## Task 1: Creating a namespace
+
+Before we start with this lab we will create a new namespace:
 
 ```
-kubectl apply -f lab-04-namespace.yml
+kubectl create namespace lab-04-${USERNAME}
 ```
 
-## Task 2: Deleting objects using YAML
-
-Deleting an object is even easier, only requirement is that you have the orignal 
-YAML file at your disposal:
+Verify that your namespace was created:
 
 ```
-kubectl delete -f lab-04-namespace.yml
+kubectl get namespaces
+
+NAME             STATUS    AGE
+default          Active    1h
+kube-public      Active    1h
+kube-system      Active    1h
+lab-04-trescst   Active    7s
 ```
 
-## Task 3: Multiple objects
+## Task 2: Starting your first pod
 
-When you have multiple objects you have different options:
-* you can put multiple objects in the same YAML (using lists)
-* you can have multiple YAML files inside a directory and `kubectl apply` the 
-directory (for example: `kubectl apply -f directory_full_of_yaml/`)
-
-## Task 4: YAML and namespaces
-
-When working with YAML you can use namespaces in different ways:
-* metadata in YAML
-* option on the command line
-
-When working with metadata your YAML will look like this:
+To run your first pod (the official nginx Docker image), run the following
+command:
 
 ```
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx
-  namespace: lab-04-<username>
-spec:
-  containers:
-  - name: nginx
-    image: nginx
+kubectl run --generator=run-pod/v1 --image=nginx nginx -n lab-04-${USERNAME}
+
+pod "nginx" created
 ```
 
-You will create the object using:
+The above command will create a single pod that is based on the official nginx
+Docker image.  Run the following command to verify that the pods has been
+created and is in the running state (if the pod is not yet in the running state
+wait a couple of seconds and try to run the command again):
 
 ```
-kubectl apply -f lab-04-metadata_namespace.yml
+kubectl get pods -n lab-04-${USERNAME}
+
+NAME      READY     STATUS    RESTARTS   AGE
+nginx     1/1       Running   0          22s
 ```
 
-Or you can omit the namespace in the metadata and provide it at the command 
-line:
+As we have not yet configured any services and/or ingresses we will use a litte
+"hack" to access our pod we just created.
+
+Run the following command to forward the port of the pod (in our case port 80)
+running in our Kubernetes cluster to a port on your laptop (in this case port
+8080).
 
 ```
-apiVersion: v1
-kind: Pod
-metadata:
-  name: nginx
-  namespace: lab-04-<username>
-spec:
-  containers:
-  - name: nginx
-    image: nginx
+kubectl port-forward nginx 8080:80 -n lab-04-${USERNAME}
 ```
 
-In this case you will create the object using:
+Now go to your browser and surf to http://localhost:8080, you should be greeted
+with the default nginx welcome page.
+
+If that works you can close the port-foward connection by pressing `CTRL+c`.
+
+## Task 3: Connecting to your pod
+
+To connect to your pod, you can use the following command (notice how it
+resembles the `docker exec` command):
 
 ```
-kubectl apply -f lab-04-without_metadata_namespace.yml -n lab-04-<username>
+kubectl exec -ti nginx bash -n lab-04-${USERNAME}
+
+root@nginx:/#
 ```
 
-Both options have their specific use-cases.
+Notice how the prompt changes.  `exec`-ing into a pod is very powerful for
+troubleshooting, but keep in mind that by default pods/containers are immutable
+so remember to not make any changes inside the pods/container.
+
+To exit run the `exit` command.
+
+## Task 4: Pod logs
+
+Again similar to when working with Docker containers, Kubernetes has a built-in
+feature that exposes all stdout/stderr output into logs.  To access those logs
+issue the following command:
+
+```
+kubectl logs nginx -n lab-04-${USERNAME}
+
+127.0.0.1 - - [11/Mar/2019:11:40:47 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
+127.0.0.1 - - [11/Mar/2019:11:40:48 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
+127.0.0.1 - - [11/Mar/2019:11:40:49 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
+127.0.0.1 - - [11/Mar/2019:11:40:50 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
+```
+
+A very handy option of `kubectl logs` is that you can follow them using the `-f`
+option, this is extremely useful when troubleshooting:
+
+```
+kubectl logs nginx -n lab-04-${USERNAME} -f
+```
+
+Hit `CTRL+c` to exit the logs.
 
 ## Task 5: Cleaning up
 
-Clean up any namespaces you might have created during this lab: 
-`kubectl delete ns ...`
+Because we are working with namespaces it is very easy to clean everything up,
+simple issue the command below:
+
+```
+kubectl delete namespace lab-04-${USERNAME}
+```
