@@ -1,8 +1,8 @@
 # Lab 05 - Deployments
 
-Deploying pods is not something you normally do when working with Kubernetes, 
-instead of interacting with pods directly you would use a higher lever 
-construct.  Deployments are such a higher level construct, they are usually the 
+Deploying pods is not something you normally do when working with Kubernetes,
+instead of interacting with pods directly you would use a higher lever
+construct.  Deployments are such a higher level construct, they are usually the
 way you would describe your applications.
 
 To make copy/pasting easier we will again export our username first:
@@ -39,7 +39,7 @@ spec:
         - containerPort: 80
 ```
 
-Copy the above into a file `lab-05-deployment.yml` and `kubectl apply` it (we 
+Copy the above into a file `lab-05-deployment.yml` and `kubectl apply` it (we
 will create a new namespace first):
 
 ```
@@ -47,7 +47,7 @@ kubectl create ns lab-05-${USERNAME}
 kubectl apply -f lab-05-deployment.yml -n lab-05-${USERNAME}
 ```
 
-Use `kubectl port-forward` to see the deployed application in your local 
+Use `kubectl port-forward` to see the deployed application in your local
 browser:
 
 ```
@@ -60,8 +60,8 @@ Kill the `kubectl port-forward` process by pressing `CTRL+c`.
 
 ## Task 2: Scaling a deployment
 
-Because we are using a deployment we can very easily scale our application from 
-a Kubernetes point of view (you of course need to ensure that your application 
+Because we are using a deployment we can very easily scale our application from
+a Kubernetes point of view (you of course need to ensure that your application
 is stateless so it can properly scale).
 
 Scaling your running application is as simple as:
@@ -72,7 +72,7 @@ kubectl scale deployment container-info --replicas=3 -n lab-05-${USERNAME}
 deployment.extensions "container-info" scaled
 ```
 
-When you do a `kubectl get pods -n lab-05-${USERNAME}` you will see that there 
+When you do a `kubectl get pods -n lab-05-${USERNAME}` you will see that there
 are 2 additional container-info pods being started.
 
 Scaling down to 1 can be done by re-applying the original YAML:
@@ -81,18 +81,58 @@ Scaling down to 1 can be done by re-applying the original YAML:
 kubectl apply -f lab-05-deployment.yml -n lab-05-${USERNAME}
 ```
 
-When you do a `kubectl get pods -n lab-05-${USERNAME}` you will see 2 pods are 
+When you do a `kubectl get pods -n lab-05-${USERNAME}` you will see 2 pods are
 being terminated.
 
 > NOTE: scaling up can also be done by editing the "replica" field in the YAML
 
-## Task 3: Changing the image of a deployment
+## Task 3: Exposing the deployment via a service
 
-Updating the image (tag) of a deployment is just as easy as scaling a deployment 
+When our deployment consists of multiple pods we can't use the port-forward to
+reach all pods. In this scenario we will have to create a service and expose
+this service.
+
+In lab-06 we will dig deeper in creating a service. For now just follow these commands.
+
+```
+kubectl expose deployment container-info --type=NodePort --name=my-container-info-service
+-n lab-05-${USERNAME}
+```
+
+Our service is exposed now. Let's go find the port where it is running on.
+
+```
+kubectl get services -n lab-05-${USERNAME}
+
+NAME                        TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+my-container-info-service   NodePort   10.108.162.148   <none>        80:32765/TCP   11s
+```
+
+In this case the service is running on port 32765. The only thing we need to do
+now is get the IP of the minikube.
+
+```
+minikube ip
+```
+
+The output of this commando is the IP of your minikube. Now browse to the following
+ip.
+
+```
+<minikube_ip>:<service_port>
+```
+
+When following these steps you are able to reach all the pods from the service.
+As said before, we will dig deeper into creating these services in the next lab.
+
+## Task 4: Changing the image of a deployment
+
+Updating the image (tag) of a deployment is just as easy as scaling a deployment
 and it also can be done using the CLI or by editing the YAML.
 
 ```
-kubectl set image deployment container-info containerinfo=gluobe/container-info:green -n lab-05-${USERNAME}
+kubectl set image deployment container-info containerinfo=gluobe/container-info:green
+-n lab-05-${USERNAME}
 ```
 
 Or simply edit the YAML and `kubectl apply` it again:
@@ -123,5 +163,5 @@ spec:
 
 ## Task 4: Cleaning up
 
-Clean up any namespaces you might have created during this lab: 
+Clean up any namespaces you might have created during this lab:
 `kubectl delete ns ...`
