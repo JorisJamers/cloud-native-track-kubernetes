@@ -119,7 +119,7 @@ The output of this commando is the IP of your minikube. Now browse to the follow
 ip.
 
 ```
-<minikube_ip>:<service_port>
+open http://$(minikube ip):8080
 ```
 
 When following these steps you are able to reach all the pods from the service.
