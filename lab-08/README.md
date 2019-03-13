@@ -73,5 +73,100 @@ And connect to the service in the browser.
 minikube service my-container-info-service -n lab-08-${USERNAME}
 ```
 
+## Task 3 : Create a secret from literal
 
-TODO  --> Create a new application for the environment var? Tweak above ymls if necessary.
+Secrets can be handled differently in a kubernetes cluster. There are 3 ways to
+handle these secrets. From `literal`, from a `file` and from a `YAML` file.
+
+If you want to create a secret from `literal` it looks like this.
+
+```
+kubectl create secret generic lab-08-secret --from-literal=username=${USERNAME}
+--from-literal=password=<password> -n lab-08-${USERNAME}
+```
+
+You will get confirmation that the secret has been created.
+
+```
+secret "lab-08-secret" created
+```
+
+This secret can be listed by the command :
+
+```
+kubectl get secret -n lab-08-${USERNAME}-literal
+```
+
+## Task 4 : Create a secret from a file
+
+The second option we have is creating the secret from a file. First of all create
+the files we are going to use in the command.
+
+```
+echo -n "${USERNAME}" > ./username.txt
+echo -n "<password>" > ./password.txt
+```  
+
+If these 2 files are created we can use these to create the secret.
+
+```
+kubectl create secret generic lab-08-${USERNAME}-file --from-file=./username.txt --from-file=./password.txt
+```
+
+## Task 5 : Create a secret from yaml
+
+Our last option we have is to create the secret directly from a yaml. This looks
+like the services, deployments, ... we already created in these labs. First we need
+to encrypt our username and password. The following credentials are going to be used
+as an example. Create your own username and password for this lab.
+
+```
+ echo -n 'admin' | base64
+```
+
+This will give you the following output : `YWRtaW4=`
+
+Now do the password.
+
+```
+echo -n '1f2d1e2e67df' | base64
+```
+
+This will give you the following output : `MWYyZDFlMmU2N2Rm`
+
+The following
+content of a yaml will create a secret when we apply it. Let's name the yaml
+`secret.yaml`
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lab-08-secret-yaml
+type: Opaque
+data:
+  username: YWRtaW4=
+  password: MWYyZDFlMmU2N2Rm
+```
+
+In this yaml file we specify the output we generated from the base64 encode. At
+this moment you are able to apply the yaml file and the secret will be created.
+
+```
+kubectl create -f ./secret.yaml -n lab-08-${USERNAME}
+```
+
+We will get the confirmation that the secret has been created.
+
+```
+secret "lab-08-secret-yaml" created
+```
+
+## Task 6 : Cleanup
+
+```
+kubectl delete ns lab-08-${USERNAME}
+```
+TODO
+- Create a new application for the environment var? Tweak above ymls if necessary.
+- Create an example to use the secrets 
