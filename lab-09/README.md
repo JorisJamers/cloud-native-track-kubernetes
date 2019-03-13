@@ -174,8 +174,3 @@ Clean up the environment.
 ```
 kubectl delete ns lab-09
 ```
-
-
-
-
-TODO
