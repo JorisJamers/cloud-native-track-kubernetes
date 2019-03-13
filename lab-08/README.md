@@ -287,7 +287,7 @@ This will output : `N0T$oS3cREtP@SSw0rD`
 
 This is the password we used before in this lab.
 
-## Task : Cleanup
+## Task 8: Cleanup
 
 Clean up the namespace for this lab:
 

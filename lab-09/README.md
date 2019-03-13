@@ -42,7 +42,11 @@ mkdir -p /mnt/data/images
 Let's download a couple of images into our persistent images directory:
 
 ```
-echo 'Hello the minikube instance' > /mnt/data/index.html
+curl -so /mnt/data/images/meme1.jpeg https://raw.githubusercontent.com/gluobe/cloud-native-track-kubernetes/master/lab-09/images/meme1.jpeg
+curl -so /mnt/data/images/meme2.jpeg https://raw.githubusercontent.com/gluobe/cloud-native-track-kubernetes/master/lab-09/images/meme2.jpeg
+curl -so /mnt/data/images/meme3.jpeg https://raw.githubusercontent.com/gluobe/cloud-native-track-kubernetes/master/lab-09/images/meme3.jpeg
+curl -so /mnt/data/images/meme4.jpeg https://raw.githubusercontent.com/gluobe/cloud-native-track-kubernetes/master/lab-09/images/meme4.jpeg
+curl -so /mnt/data/images/meme5.jpeg https://raw.githubusercontent.com/gluobe/cloud-native-track-kubernetes/master/lab-09/images/meme5.jpeg
 ```
 
 Now `exit` the minikube instance.
@@ -55,10 +59,11 @@ exit
 
 ## Task 2 : Create a persistent volume
 
-In this task we are going to create the persistent volume. This will put the volume
-in a `Available` state. It's not yet bound to a PersistentVolumeClaim at this point.
+In this task we are going to create the persistent volume. This will put the 
+volume in a `Available` state. It's not yet bound to a persistent volume claim 
+at this point.  Keep in mind that a persistent volume is not namespaced!
 
-Create a file `pv-lab-09.yaml` with the following content.
+Create a file `lab-09-pv.yml` with the following content.
 
 ```
 kind: PersistentVolume
@@ -72,30 +77,35 @@ spec:
   capacity:
     storage: 1Gi
   accessModes:
-    - ReadWriteOnce
+    - ReadOnlyMany
   hostPath:
-    path: "/mnt/data"
+    path: "/mnt/data/images"
 ```
 
 You can now create the persistent volume with the kubectl command. It will look
 like this.
 
 ```
-kubectl apply -f pv-lab-09.yaml -n lab-09
+kubectl apply -f lab-09-pv.yml
+
+persistentvolume "lab-09-volume" created
 ```
 
 At this point the persistent volume is created. Be sure that it its by using the
 get command.
 
 ```
-kubectl get pv -n lab-09
+kubectl get pv
+
+NAME            CAPACITY   ACCESSMODES   RECLAIMPOLICY   STATUS      CLAIM     STORAGECLASS   REASON    AGE
+lab-09-volume   1Gi        ROX           Retain          Available             manual                   23s
 ```
 
 ## Task 3 : Claim a persistent Volume
 
-Now we need to create the claim. This way we can bind the persistent volume
-claim to a deployment. First we need to create the file `pv-claim-lab-09.yaml`
-with the following content.
+Now we need to create the claim for this persistent volume. This way we can bind 
+the persistent volume claim to a deployment. First we need to create the file 
+`lab-09-pvc.yml` with the following content.
 
 ```
 kind: PersistentVolumeClaim
@@ -105,7 +115,7 @@ metadata:
 spec:
   storageClassName: manual
   accessModes:
-    - ReadWriteOnce
+    - ReadOnlyMany
   resources:
     requests:
       storage: 1Gi
@@ -114,66 +124,138 @@ spec:
 And apply it with the following command.
 
 ```
-kubectl create -f pv-claim-lab-09.yaml -n lab-09
+kubectl apply -f lab-09-pvc.yml -n lab-09
+
+persistentvolumeclaim/lab-09-claim created
 ```
 
 You can confirm that it is created with the following command.
 
 ```
 kubectl get pvc -n lab-09
+
+NAME           STATUS   VOLUME          CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+lab-09-claim   Bound    lab-09-volume   1Gi        ROX            manual         28s
 ```
 
-## Task 4 : Mount persistent volume in a pod
+## Task 4 : Mounting a persistent volume in pods
 
 Now we are able to use the PersistentVolumeClaim in a pod. The following
 steps will show you how you can do this.
 
-First we need to create a file that describes our pod. This will be `pv-lab-09-pod.yaml`
-with the following content.
+First we need to create a file that describes our pod. This will be 
+`lab-09-deployment.yml` with the following content.
 
 ```
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meme-persistent
+  labels:
+    app: meme-persistent
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: meme-persistent
+  template:
+    metadata:
+      labels:
+        app: meme-persistent
+    spec:
+      volumes:
+      - name: lab-09-volume
+        persistentVolumeClaim:
+          claimName: lab-09-claim
+      containers:
+      - name: meme-persistent
+        image: gluobe/meme-persistent:v1
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - mountPath: "/var/www/html/images"
+            name: lab-09-volume
+```
+
+Apply the file with the kubectl command:
+
+```
+kubectl create -f lab-09-deployment.yml -n lab-09
+
+deployment.apps/meme-persistent created
+```
+
+Be sure that the pods are running.
+
+```
+kubectl get pods -n lab-09
+
+meme-persistent-84cdc97446-dc2v4   1/1     Running   0          31s
+meme-persistent-84cdc97446-dh59c   1/1     Running   0          31s
+meme-persistent-84cdc97446-tq8h8   1/1     Running   0          31s
+```
+
+Create a service to access the application, create a file `lab-09-service.yml` 
+with the content below:
+
+```
+kind: Service
 apiVersion: v1
 metadata:
-  name: pv-lab-09-pod
+  name: meme-persistent
 spec:
-  volumes:
-    - name: lab-09-volume
-      persistentVolumeClaim:
-       claimName: lab-09-claim
-  containers:
-    - name: pv-lab-09-container
-      image: nginx
-      ports:
-        - containerPort: 80
-          name: "http-server"
-      volumeMounts:
-        - mountPath: "/usr/share/nginx/html"
-          name: lab-09-volume
+  selector:
+    app: meme-persistent
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: NodePort
 ```
 
-Apply the file with the kubectl command.
+Apply the file:
 
 ```
-kubectl create -f pv-lab-09-pod.yaml -n lab-09
+kubectl apply -f lab-09-service.yml -n lab-09
+
+service/meme-persistent created
 ```
 
-Be sure that the pod is running.
+Check the application:
 
 ```
-kubectl get pod pv-lab-09-pod -n lab-09
+minikube service meme-persistent -n lab-09
 ```
 
-When you see your pod running you can do a quick port-forward to check out the webserver running in the pod. This will be with the `index.html` file we created at the start of this lab.
+When you refresh the page you should see that again the avatar changes (there 
+are three pods), but the images remain the same (the PHP script will simply 
+show all the images from the persistent volume directory).
+
+You can download one additional image and this should instantly be available on 
+all the pods:
 
 ```
-kubectl port-forward pv-lab-09-pod 8080:80 -n lab-09
+minikube ssh
 ```
 
-Visit `localhost:8080` and the message we created in the `/mnt/data/index.html` file will appear!
+Make sure you are `root`:
 
-Clean up the environment.
+```
+sudo su -
+```
+
+Download an additional image:
+
+```
+curl -so /mnt/data/images/kubernetes.jpeg https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.png
+```
+
+## Task 5: Cleanup
+
+Clean up the namespace for this lab:
 
 ```
 kubectl delete ns lab-09
+
+namespace "lab-09" deleted
 ```
