@@ -287,7 +287,9 @@ This will output : `N0T$oS3cREtP@SSw0rD`
 
 This is the password we used before in this lab.
 
-## Task 7 : Cleanup
+## Task : Cleanup
+
+Clean up the namespace for this lab:
 
 ```
 kubectl delete ns lab-08
