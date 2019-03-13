@@ -1,10 +1,12 @@
 # Lab 09 - Persistent Volumes
 
-Persistent volumes can be used to store data in that way that if the container
-stops or gets removed you still have the files available. It prevents that your
-data is volatile.
+Persistent volumes can be used to store stateful/persistent data, this means 
+that when a pods is replaced its successor will still have the data available. 
+This can be used when you want to run persistent databases in pods and/or when 
+you want to share data between different pods.
 
-In this scenario we will create an `index.html` file in the minikube instance.
+In this lab we will make a persistent volume that we fill with images, those 
+images will then be served by our application (pods).
 
 ## Task 0: Creating a namespace
 
@@ -16,7 +18,7 @@ kubectl create ns lab-09
 namespace "lab-09" created
 ```
 
-## Task 1 : Create index.html file on minikube
+## Task 1 : Generating some stateful/persistent data
 
 First we will need to ssh into the minikube instance.
 
@@ -24,25 +26,26 @@ First we will need to ssh into the minikube instance.
 minikube ssh
 ```
 
-When you are in the minikube instance make sure that you are root. Otherwise you might not be able to create directories and / or files.
+When you are in the minikube instance make sure that you are root. Otherwise you 
+might not be have permission to create the required directories and/or files:
 
 ```
 sudo su -
 ```
 
-Now we need to create a directory for our `index.html` file.
+Now we need to create a directory to store our images.
 
 ```
-mkdir /mnt/data
+mkdir -p /mnt/data/images
 ```
 
-Let's create a simple index file.
+Let's download a couple of images into our persistent images directory:
 
 ```
 echo 'Hello the minikube instance' > /mnt/data/index.html
 ```
 
-Now exit the minikube instance.
+Now `exit` the minikube instance.
 
 ```
 exit
