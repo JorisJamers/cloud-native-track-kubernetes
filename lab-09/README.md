@@ -250,6 +250,8 @@ Download an additional image:
 curl -so /mnt/data/images/kubernetes.jpeg https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.png
 ```
 
+Refresh your browser to see the new image.
+
 ## Task 5: Cleanup
 
 Clean up the namespace for this lab:
