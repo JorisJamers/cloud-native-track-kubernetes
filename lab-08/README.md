@@ -6,7 +6,8 @@ Create a namespace for this lab:
 
 ```
 kubectl create ns lab-08
-
+```
+```
 namespace "lab-08" created
 ```
 
