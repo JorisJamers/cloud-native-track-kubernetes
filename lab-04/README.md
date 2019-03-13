@@ -3,18 +3,14 @@
 In this lab we will run our first, very basic, application on Kubernetes.  We
 will basically run a single pod as our application.
 
-To make copy/pasting easier we will again export our username first:
-
-```
-export USERNAME=<username>
-```
-
 ## Task 1: Creating a namespace
 
-Before we start with this lab we will create a new namespace:
+Create a namespace for this lab:
 
 ```
-kubectl create namespace lab-04-${USERNAME}
+kubectl create ns lab-04
+
+namespace "lab-04" created
 ```
 
 Verify that your namespace was created:
@@ -26,7 +22,7 @@ NAME             STATUS    AGE
 default          Active    1h
 kube-public      Active    1h
 kube-system      Active    1h
-lab-04-trescst   Active    7s
+lab-04           Active    7s
 ```
 
 ## Task 2: Starting your first pod
@@ -35,7 +31,7 @@ To run your first pod (the official nginx Docker image), run the following
 command:
 
 ```
-kubectl run --generator=run-pod/v1 --image=nginx nginx -n lab-04-${USERNAME}
+kubectl run --generator=run-pod/v1 --image=nginx nginx -n lab-04
 
 pod "nginx" created
 ```
@@ -46,7 +42,7 @@ created and is in the running state (if the pod is not yet in the running state
 wait a couple of seconds and try to run the command again):
 
 ```
-kubectl get pods -n lab-04-${USERNAME}
+kubectl get pods -n lab-04
 
 NAME      READY     STATUS    RESTARTS   AGE
 nginx     1/1       Running   0          22s
@@ -60,7 +56,7 @@ running in our Kubernetes cluster to a port on your laptop (in this case port
 8080).
 
 ```
-kubectl port-forward nginx 8080:80 -n lab-04-${USERNAME}
+kubectl port-forward pod/nginx 8080:80 -n lab-04
 ```
 
 Now go to your browser and surf to http://localhost:8080, you should be greeted
@@ -74,7 +70,7 @@ To connect to your pod, you can use the following command (notice how it
 resembles the `docker exec` command):
 
 ```
-kubectl exec -ti nginx bash -n lab-04-${USERNAME}
+kubectl exec -ti nginx bash -n lab-04
 
 root@nginx:/#
 ```
@@ -92,7 +88,7 @@ feature that exposes all stdout/stderr output into logs.  To access those logs
 issue the following command:
 
 ```
-kubectl logs nginx -n lab-04-${USERNAME}
+kubectl logs nginx -n lab-04
 
 127.0.0.1 - - [11/Mar/2019:11:40:47 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
 127.0.0.1 - - [11/Mar/2019:11:40:48 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
@@ -104,16 +100,17 @@ A very handy option of `kubectl logs` is that you can follow them using the `-f`
 option, this is extremely useful when troubleshooting:
 
 ```
-kubectl logs nginx -n lab-04-${USERNAME} -f
+kubectl logs nginx -n lab-04 -f
 ```
 
 Hit `CTRL+c` to exit the logs.
 
 ## Task 5: Cleaning up
 
-Because we are working with namespaces it is very easy to clean everything up,
-simple issue the command below:
+Clean up the namespace for this lab:
 
 ```
-kubectl delete namespace lab-04-${USERNAME}
+kubectl delete ns lab-04
+
+namespace "lab-04" deleted
 ```

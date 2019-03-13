@@ -4,7 +4,6 @@ In this hands-on workshop you will learn the basics of Kubernetes.
 
 ## Labs
 
-* [Lab 00 - Prerequisites](lab-00)
 * [Lab 01 - Minikube](lab-01)
 * [Lab 02 - Nodes](lab-02)
 * [Lab 03 - Namespaces](lab-03)
