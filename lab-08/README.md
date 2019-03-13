@@ -1,29 +1,63 @@
 # Lab 08 - Config Maps & Secrets
 
-## Task 1: Create a configmap
+## Task 0: Creating a namespace
 
-With a configmap we are able to pass environment variables to the Deployment we
-are creating.
-
-Create a file `container-info.properties` with the following content :
+Create a namespace for this lab:
 
 ```
-# container-info.properties
+kubectl create ns lab-08
+
+namespace "lab-08" created
+```
+
+## Task 1: Creating a configmap
+
+With a configmap we are able to easily pass environment variables to the 
+deployment we are creating.
+
+Create a file `container-info.env` with the following content:
+
+```
+# container-info.env
 
 IMAGE_COLOR=green
 ```
 
-This will pass an environment variable to the pod. We are now able to create
-a configmap with this file.
+This will pass an environment variable to the pods that we will create with our 
+deployment. We are now able to create a configmap with this file.
 
 ```
-kubectl create configmap container-info-env --from-env-file='./container-info.properties'
+kubectl create configmap container-info-env --from-env-file='./container-info.env' -n lab-08
 ```
 
-## Task 2: Add the configmap in the deployment.
+Verify that the configmap has been created succesfully:
 
-We will use the deployment from our previous labs. With some extra parameters
-to include the configmap.
+```
+kubectl get configmap container-info-env -n lab-08
+
+NAME                 DATA      AGE
+container-info-env   1         59s
+
+
+kubectl describe configmap container-info-env -n lab-08
+
+Name:		container-info-env
+Namespace:	lab-08
+Labels:		<none>
+Annotations:	<none>
+
+Data
+====
+IMAGE_COLOR:
+----
+green
+Events:	<none>
+```
+
+## Task 2: Adding the configmap in the deployment.
+
+The deployment we create now looks a lot like the deployment we created in the 
+previous labs.
 
 ```
 apiVersion: apps/v1
@@ -44,100 +78,164 @@ spec:
     spec:
       containers:
       - name: container-info
-        image: gluobe/container-info:blue
+        image: gluobe/container-info:variable
         ports:
         - containerPort: 80
         envFrom:
           - configMapRef:
               name: container-info-env
 ```     
-Copy the above into a file lab-08-deployment.yml
+
+Copy the content above into a file `lab-08-deployment.yml`.
 
 Now we create the new deployment with our environment variables.
 
 ```
-kubectl create ns lab-08-${USERNAME}
-kubectl apply -f lab-08-deployment.yml -n lab-08-${USERNAME}
+kubectl apply -f lab-08-deployment.yml -n lab-08
+
+deployment "container-info" created
 ```
 
 We will expose the service again.
 
 ```
-kubectl expose deployment container-info --type=NodePort --name=my-container-info-service
--n lab-08-${USERNAME}
+kubectl expose deployment container-info --type=NodePort --name=container-info -n lab-08
+
+service "container-info" exposed
 ```
 
 And connect to the service in the browser.
 
 ```
-minikube service my-container-info-service -n lab-08-${USERNAME}
+minikube service container-info -n lab-08
 ```
 
-## Task 3 : Create a secret from literal
+## Task 3: Updating an existing configmap
 
-Secrets can be handled differently in a kubernetes cluster. There are 3 ways to
+Configmaps make it possible to change configuration of a application (pod), 
+without needing to completely rebuild a Docker image.  Let's try this.
+
+Issue the following command, and replace the image color to `yellow` and save 
+the  file (you we get a `configmap "container-info-env" edited` message when 
+succesful):
+
+```
+kubectl edit configmap container-info-env -n lab-08
+
+configmap "container-info-env" edited
+```
+
+Visit your application again to see if the color has indeed been changed:
+
+```
+minikube service container-info -n lab-08
+```
+
+You should notice that the color has NOT changed... Do not worry, this is 
+expecte behaviour. Before we see the change we need to restart the pod, for ease 
+of use we  will do this by simply deleting the pod (Kubernetes we start a new 
+one automatically).
+
+First list (and copy) the name of the pod:
+
+```
+kubectl get pods -n lab-08
+
+NAME                              READY     STATUS    RESTARTS   AGE
+container-info-84dc4f8678-bbcbp   1/1       Running   0          18m
+```
+
+Now delete that pod:
+
+```
+kubectl delete pod container-info-84dc4f8678-bbcbp -n lab-08
+```
+
+If you are quick enough you will we temporary see two pods, one starting/running 
+and one terminating/running:
+
+```
+NAME                              READY     STATUS        RESTARTS   AGE
+container-info-84dc4f8678-2m9xm   1/1       Running       0          2s
+container-info-84dc4f8678-bbcbp   0/1       Terminating   0          20m
+```
+
+Now visit your application again, this time you should see that the color has 
+changed to yellow:
+
+```
+minikube service my-container-info-service -n lab-08
+```
+
+## Task 4 : Create a secret from literal
+
+Secrets can be handled differently in a Kubernetes cluster. There are 3 ways to
 handle these secrets. From `literal`, from a `file` and from a `YAML` file.
 
 If you want to create a secret from `literal` it looks like this.
 
 ```
-kubectl create secret generic lab-08-secret --from-literal=username=${USERNAME}
---from-literal=password=<password> -n lab-08-${USERNAME}
+kubectl create secret generic lab-08-secret-literal --from-literal=password=N0T$oS3cREtP@SSw0rD -n lab-08
+
+secret "lab-08-secret-literal" created
 ```
 
-You will get confirmation that the secret has been created.
+This secret can be listed by the command:
 
 ```
-secret "lab-08-secret" created
+kubectl get secret -n lab-08
+
+NAME                    TYPE                                  DATA      AGE
+default-token-twfzc     kubernetes.io/service-account-token   3         8m
+lab-08-secret-literal   Opaque                                1         25s
 ```
 
-This secret can be listed by the command :
+## Task 5: Creating a secret from a file
+
+The second option we have is creating the secret from a file. First of all 
+create the file we are going to use in the command.
 
 ```
-kubectl get secret -n lab-08-${USERNAME}-literal
-```
-
-## Task 4 : Create a secret from a file
-
-The second option we have is creating the secret from a file. First of all create
-the files we are going to use in the command.
-
-```
-echo -n "${USERNAME}" > ./username.txt
-echo -n "<password>" > ./password.txt
+echo -n "N0T$oS3cREtP@SSw0rD" > ./password.txt
 ```  
 
-If these 2 files are created we can use these to create the secret.
+If this file is created we can use it to create the secret.
 
 ```
-kubectl create secret generic lab-08-${USERNAME}-file --from-file=./username.txt
---from-file=./password.txt
+kubectl create secret generic lab-08-secret-file --from-file=./password.txt -n lab-08
+
+secret "lab-08-secret-file" created
 ```
 
-## Task 5 : Create a secret from yaml
-
-Our last option we have is to create the secret directly from a yaml. This looks
-like the services, deployments, ... we already created in these labs. First we need
-to encrypt our username and password. The following credentials are going to be used
-as an example. Create your own username and password for this lab.
+Verify that you secret has been created succesfully:
 
 ```
- echo -n 'admin' | base64
+kubectl get secret -n lab-08
+
+NAME                    TYPE                                  DATA      AGE
+default-token-7sszf     kubernetes.io/service-account-token   3         4m
+lab-08-secret-file      Opaque                                1         17s
+lab-08-secret-literal   Opaque                                1         1m
 ```
 
-This will give you the following output : `YWRtaW4=`
+## Task 6: Creating a secret from YAML
 
-Now do the password.
+Our last option we have is to create the secret directly from a yaml. This is 
+similar to how we create services, deployments,... and andy other Kubernetes 
+objects we already created in these labs.  First we need to encrypt our 
+password.
+
+> NOTE: as you will see by default secrets are simply base64 encoded, so not 
+> really very secret
 
 ```
-echo -n '1f2d1e2e67df' | base64
+echo -n 'N0T$oS3cREtP@SSw0rD' | base64
+
+ TjBUJG9TM2NSRXRQQFNTdzByRA==
 ```
 
-This will give you the following output : `MWYyZDFlMmU2N2Rm`
-
-The following
-content of a yaml will create a secret when we apply it. Let's name the yaml
-`secret.yaml`
+This base64 encoded string we can you in the YAML file we will create.  Create 
+a file `lab-08-secret-yaml.yml` with the content below:
 
 ```
 apiVersion: v1
@@ -146,55 +244,53 @@ metadata:
   name: lab-08-secret-yaml
 type: Opaque
 data:
-  username: YWRtaW4=
-  password: MWYyZDFlMmU2N2Rm
+  password: TjBUJG9TM2NSRXRQQFNTdzByRA==
 ```
 
 In this yaml file we specify the output we generated from the base64 encode. At
 this moment you are able to apply the yaml file and the secret will be created.
 
 ```
-kubectl create -f ./secret.yaml -n lab-08-${USERNAME}
-```
+kubectl create -f ./lab-08-secret-yaml.yml -n lab-08
 
-We will get the confirmation that the secret has been created.
-
-```
 secret "lab-08-secret-yaml" created
 ```
 
-## Task 6 : Check content of a secret
-
-We can describe a secret just like any other object in kubernetes.
+Verify that you secret has been created succesfully:
 
 ```
-kubectl get secret lab-08-secret-yaml -o yaml -n lab-08-${USERNAME}
+kubectl get secret -n lab-08
+
+NAME                    TYPE                                  DATA      AGE
+default-token-7sszf     kubernetes.io/service-account-token   3         11m
+lab-08-secret-file      Opaque                                1         6m
+lab-08-secret-literal   Opaque                                1         7m
+lab-08-secret-yaml      Opaque                                1         44s
 ```
 
-You will see the encrypted username and password in the yaml. This can be decoded
-with the following command.
+## Task 7: Checking the content of a secret
+
+We can describe a secret just like any other object in Kubernetes.
 
 ```
-echo 'YWRtaW4=' | base64 --decode
+kubectl get secret lab-08-secret-yaml -o yaml -n lab-08
 ```
 
-This will output : `admin`
-
-You can do the same for the password.
+You will see the encoded password in the YAML. This can be decoded using the 
+following command.
 
 ```
-echo 'MWYyZDFlMmU2N2Rm' | base64 --decode
+echo 'TjBUJG9TM2NSRXRQQFNTdzByRA===' | base64 --decode
 ```
 
-This will give you the expected : `1f2d1e2e67df`
+This will output : `N0T$oS3cREtP@SSw0rD`
 
 This is the password we used before in this lab.
 
 ## Task 7 : Cleanup
 
 ```
-kubectl delete ns lab-08-${USERNAME}
+kubectl delete ns lab-08
+
+namespace "lab-08" deleted
 ```
-TODO
-- Create a new application for the environment var? Tweak above ymls if necessary.
-- Create an example to use the secrets
