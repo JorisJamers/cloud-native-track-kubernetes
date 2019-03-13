@@ -162,6 +162,32 @@ We will get the confirmation that the secret has been created.
 secret "lab-08-secret-yaml" created
 ```
 
+## Task 6 : Check content of a secret
+
+We can describe a secret just like any other object in kubernetes.
+
+```
+kubectl get secret lab-08-secret-yaml -o yaml -n lab-08-${USERNAME}
+```
+
+You will see the encrypted username and password in the yaml. This can be decoded with the following command.
+
+```
+echo 'YWRtaW4=' | base64 --decode
+```
+
+This will output : `admin`
+
+You can do the same for the password.
+
+```
+echo 'MWYyZDFlMmU2N2Rm' | base64 --decode
+```
+
+This will give you the expected : `1f2d1e2e67df`
+
+This is the password we used before in this lab. 
+
 ## Task 6 : Cleanup
 
 ```
@@ -169,4 +195,4 @@ kubectl delete ns lab-08-${USERNAME}
 ```
 TODO
 - Create a new application for the environment var? Tweak above ymls if necessary.
-- Create an example to use the secrets 
+- Create an example to use the secrets
