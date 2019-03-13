@@ -186,9 +186,9 @@ echo 'MWYyZDFlMmU2N2Rm' | base64 --decode
 
 This will give you the expected : `1f2d1e2e67df`
 
-This is the password we used before in this lab. 
+This is the password we used before in this lab.
 
-## Task 6 : Cleanup
+## Task 7 : Cleanup
 
 ```
 kubectl delete ns lab-08-${USERNAME}
