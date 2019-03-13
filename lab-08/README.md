@@ -110,7 +110,8 @@ echo -n "<password>" > ./password.txt
 If these 2 files are created we can use these to create the secret.
 
 ```
-kubectl create secret generic lab-08-${USERNAME}-file --from-file=./username.txt --from-file=./password.txt
+kubectl create secret generic lab-08-${USERNAME}-file --from-file=./username.txt
+--from-file=./password.txt
 ```
 
 ## Task 5 : Create a secret from yaml
@@ -170,7 +171,8 @@ We can describe a secret just like any other object in kubernetes.
 kubectl get secret lab-08-secret-yaml -o yaml -n lab-08-${USERNAME}
 ```
 
-You will see the encrypted username and password in the yaml. This can be decoded with the following command.
+You will see the encrypted username and password in the yaml. This can be decoded
+with the following command.
 
 ```
 echo 'YWRtaW4=' | base64 --decode
