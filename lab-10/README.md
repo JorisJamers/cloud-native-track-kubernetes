@@ -10,7 +10,86 @@ kubectl create ns lab-10
 namespace "lab-10" created
 ```
 
-## Task 1:
+## Task 1: List
+
+You can put your deployments in a list, and apply the list. This will deploy all
+the resources you have listed in this list.
+
+Create the file `list.yml` with the following content, we also created this deployment
+and service before.
+
+```
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: container-info
+  spec:
+    ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+    type: NodePort
+    selector:
+      app: container-info
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: container-info
+    labels:
+      app: container-info
+  spec:
+    replicas: 2
+    selector:
+      matchLabels:
+        app: container-info
+    template:
+      metadata:
+        labels:
+          app: container-info
+      spec:
+        containers:
+          - name: container-info
+            image: gluobe/container-info:blue
+```
+
+We can apply the entire list in one command.
+
+```
+kubernetes apply -f list.yml -n lab-10
+```
+
+Now we can list all the resources we have created.
+
+```
+kubectl get pods -n lab-10
+
+NAME                                             READY     STATUS    RESTARTS   AGE
+container-info-5f48768ff8-dhv2k                  1/1       Running   0          6m
+container-info-5f48768ff8-pdq6n                  1/1       Running   0          6m
+list-container-info-deployment-5b8d9cbd9-svprd   1/1       Running   0          7s
+```
+
+```
+kubectl get svc -n lab-10
+
+NAME             TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
+container-info   NodePort   10.101.75.229   <none>        80:31796/TCP   7m
+```
+
+And like before we can access this deployment with the following command.
+
+```
+minikube service container-info -n lab-10
+```
+
+Now delete the namespace to start the following tasks in a clean namespace.
+
+```
+kubectl ns delete lab-10
+```
 
 ## Task 2: Blue / green deployment
 
@@ -345,6 +424,12 @@ Events:
   Normal   Created    21m                kubelet, minikube  Created container
   Normal   Started    21m                kubelet, minikube  Started container
   Warning  Unhealthy  1m (x2 over 2m)    kubelet, minikube  Liveness probe failed: cat: can't open '/tmp/healthy': No such file or directory
+```
+
+Now delete the namespace to start the following tasks in a clean namespace.
+
+```
+kubectl ns delete lab-10
 ```
 
 ## Task 4: Node labeling
