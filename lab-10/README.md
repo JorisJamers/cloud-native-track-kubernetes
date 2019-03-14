@@ -272,6 +272,68 @@ Apply the deployment.
 ```
 kubectl apply -f label-deployment.yml -n lab-10
 ```
+### Task 4.1: Pod Affinity
+
+Pod Affinity means that you can schedule pods with the same label on the same pod.
+If available. So imagine that we want our `test` pod to run next to other pods
+with the label `test` on a node. We need to define the `podAffinity` like this.
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: with-pod-affinity
+spec:
+  affinity:
+    podAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: environment
+            operator: In
+            values:
+            - test
+  containers:
+  - name: container-info
+    image: gluobe/container-info:blue
+```
+
+We are using `requiredDuringSchedulingIgnoredDuringExecution` this means that
+this is a requirement while the pod is getting scheduled. It's also possible to
+define `preferredDuringSchedulingIgnoredDuringExecution`. This means that he will
+try to schedule the pod with these conditions if possible. Otherwise it will
+schedule the pod on a other node.
+
+
+### Task 4.2: Pod Anti Affinity
+
+The oposite from what we did above can be done with `antiAffinity`. If we do the
+following in the pod yml.
+
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: with-pod-affinity
+spec:
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: environment
+            operator: In
+            values:
+            - test
+  containers:
+  - name: container-info
+    image: gluobe/container-info:blue
+```
+
+The pod will `not` schedule next to the already running `test` environment pod
+on any node. This means that the scheduler is going to look for another pod where
+no pod is running with the label `environment=test`.
+
 
 ### Task 4.1: Taints
 
@@ -283,7 +345,7 @@ kubectl taint nodes minikube environment=test:NoSchedule
 ```
 
 If you use this commando the `minikube` node will reject all pods with the label
-`environment = test`.
+`environment=test`.
 
 TODO
 * list
