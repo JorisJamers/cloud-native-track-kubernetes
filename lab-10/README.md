@@ -273,7 +273,7 @@ Apply the deployment.
 kubectl apply -f label-deployment.yml -n lab-10
 ```
 
-### 4.1: Taints
+### Task 4.1: Taints
 
 It's also possible to taint a node. This means that the node will explicitly
 reject nodes with a defined label.
