@@ -91,7 +91,7 @@ You will see that our `blue` version of the deployment is now running on our
 minikube instance.
 
 After you exposed the `blue` version we are going to create a `green` version
-of the application. This is done by creating a file 
+of the application. This is done by creating a file
 `lab-10-deployment-green.yml` with the following content.
 
 ```
@@ -137,11 +137,11 @@ container-info-blue    3         3         3            3           12m
 container-info-green   3         3         3            3           12m
 ```
 
-A `blue` and a `green` version. Remember that our service is still pointing at 
-the `blue` version. In the next step we will update the service in a way that it 
+A `blue` and a `green` version. Remember that our service is still pointing at
+the `blue` version. In the next step we will update the service in a way that it
 will point to the `green` version of our deployment.
 
-Edit the `lab-10-service-blue-green.yml` file. You can also just clear the file 
+Edit the `lab-10-service-blue-green.yml` file. You can also just clear the file
 and copy the following content.
 
 ```
@@ -160,7 +160,7 @@ spec:
   type: NodePort
 ```
 
-The only thing that is updated in this file is basically the `version` this is 
+The only thing that is updated in this file is basically the `version` this is
 set to `green` now.
 
 ```
@@ -176,17 +176,153 @@ minikube service container-info -n lab-10
 
 When you did these steps succesfully you have done a `blue / green` on `minikube`
 
-Delete the namespace so we can start off with a clean namespace for the 
+Delete the namespace so we can start off with a clean namespace for the
 following tasks.
 
 ```
 kubectl delete namespace lab-10
 ```
 
-
 ## Task 3: Liveness / readiness
 
+To test the liveness and the readiness of a pod we are going to create the following
+file. Name the file `probes.yml` and fill with the following content.
 
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: probes
+  name: probes
+spec:
+  containers:
+  - name: probes
+    image: busybox
+    args:
+    - /bin/sh
+    - -c
+    - touch /tmp/healthy; sleep 6000
+    livenessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/healthy
+      initialDelaySeconds: 5
+      periodSeconds: 5
+    readinessProbe:
+      exec:
+        command:
+        - cat
+        - /tmp/ready
+      initialDelaySeconds: 5
+      periodSeconds: 5
+```
+
+Apply the file in your namespace to create the `probes` pod.
+
+```
+kubectl apply -f probes.yml -n lab-10
+
+pod "probes" created
+```
+
+Now we need to check the state of the pod.
+
+```
+kubectl get pods -n lab-10
+
+NAME      READY     STATUS    RESTARTS   AGE
+probes    0/1       Running   0          45s
+```
+
+We see that the pod is running but not ready yet.
+
+Before we are going to fix this readiness check we are going to create a service.
+When a pod is not ready you will not get an endpoint in that service.
+
+Create the file `probes-service.yml` with this content.
+
+```
+kind: Service
+apiVersion: v1
+metadata:
+  name: probes-service
+spec:
+  selector:
+    app: probes
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: NodePort
+```
+
+Apply the file and check out the service.
+
+```
+kubectl apply -f probes-service.yml -n lab-10
+
+service "probes-service" created
+```
+
+If we describe the service at this moment we won't see an endpoint.
+
+```
+kubectl describe service probes-service -n lab-10
+
+Name:                     probes-service
+Namespace:                lab-10
+Labels:                   <none>
+Annotations:              kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"probes-service","namespace":"lab-10"},"spec":{"ports":[{"port":80,"protocol":"...
+Selector:                 app=probes
+Type:                     NodePort
+IP:                       10.105.221.153
+Port:                     <unset>  80/TCP
+TargetPort:               80/TCP
+NodePort:                 <unset>  32748/TCP
+Endpoints:
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   <none>
+```
+
+If we fix the readiness check on the pod, we will get the endpoint. We are going to
+fix it with creating the `/tmp/ready` file in the pod.
+
+```
+kubectl exec probes touch /tmp/ready -n lab-10
+```
+
+Now you will see that the pod is ready.
+
+```
+kubectl get pods -n lab-10
+
+NAME      READY     STATUS    RESTARTS   AGE
+probes    1/1       Running   0          6m
+```
+
+And if we describe the service once again we will see that an endpoint has appeared.
+
+```
+kubectl describe service probes-service -n lab-10
+
+Name:                     probes-service
+Namespace:                lab-10
+Labels:                   <none>
+Annotations:              kubectl.kubernetes.io/last-applied-configuration={"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"probes-service","namespace":"lab-10"},"spec":{"ports":[{"port":80,"protocol":"...
+Selector:                 app=probes
+Type:                     NodePort
+IP:                       10.105.221.153
+Port:                     <unset>  80/TCP
+TargetPort:               80/TCP
+NodePort:                 <unset>  32748/TCP
+Endpoints:                172.17.0.4:80
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   <none>
+```
 
 ## Task 4: Node labeling
 
@@ -274,9 +410,9 @@ kubectl apply -f label-deployment.yml -n lab-10
 ```
 ### Task 4.1: Pod Affinity
 
-Pod Affinity means that you can schedule pods with the same label on the same 
-pod. If available. So imagine that we want our `test` pod to run next to other 
-pods with the label `test` on a node. We need to define the `podAffinity` like 
+Pod Affinity means that you can schedule pods with the same label on the same
+pod. If available. So imagine that we want our `test` pod to run next to other
+pods with the label `test` on a node. We need to define the `podAffinity` like
 this.
 
 ```
@@ -301,8 +437,8 @@ spec:
 
 We are using `requiredDuringSchedulingIgnoredDuringExecution` this means that
 this is a requirement while the pod is getting scheduled. It's also possible to
-define `preferredDuringSchedulingIgnoredDuringExecution`. This means that he 
-will try to schedule the pod with these conditions if possible. Otherwise it 
+define `preferredDuringSchedulingIgnoredDuringExecution`. This means that he
+will try to schedule the pod with these conditions if possible. Otherwise it
 will schedule the pod on a other node.
 
 ### Task 4.2: Pod Anti Affinity
@@ -331,7 +467,7 @@ spec:
 ```
 
 The pod will `not` schedule next to the already running `test` environment pod
-on any node. This means that the scheduler is going to look for another pod 
+on any node. This means that the scheduler is going to look for another pod
 where no pod is running with the label `environment=test`.
 
 ### Task 4.3: Taints
