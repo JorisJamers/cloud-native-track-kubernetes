@@ -13,6 +13,16 @@ To see which nodes are part of your Kubernetes cluster run the
 ```
 kubectl get nodes
 
+NAME       STATUS   ROLES    AGE     VERSION
+minikube   Ready    master   4h56m   v1.13.4
+```
+
+As we are using minikube we only have a single node.  Below is the output of a
+3 node cluster:
+
+```
+kubectl get nodes
+
 NAME                                        STATUS    ROLES     AGE       VERSION
 gke-kbc-steven-default-pool-b82ee1c9-5n9j   Ready     <none>    20m       v1.11.7-gke.4
 gke-kbc-steven-default-pool-b82ee1c9-6wnx   Ready     <none>    20m       v1.11.7-gke.4
@@ -24,6 +34,7 @@ information about the nodes:
 
 ```
 kubectl get nodes -o wide
+
 NAME                                        STATUS    ROLES     AGE       VERSION         EXTERNAL-IP     OS-IMAGE                             KERNEL-VERSION   CONTAINER-RUNTIME
 gke-kbc-steven-default-pool-b82ee1c9-5n9j   Ready     <none>    21m       v1.11.7-gke.4   35.188.203.43   Container-Optimized OS from Google   4.14.89+         docker://17.3.2
 gke-kbc-steven-default-pool-b82ee1c9-6wnx   Ready     <none>    21m       v1.11.7-gke.4   35.192.143.33   Container-Optimized OS from Google   4.14.89+         docker://17.3.2

@@ -11,12 +11,6 @@ Most objects in Kubernetes can be namespaced (pods, services, pvc,...), keep in
 mind however that some objects however cannot be namespaced and are cluster-wide
 (pv for example).
 
-To make copy/pasting easier we will again export our username first:
-
-```
-export USERNAME=<username>
-```
-
 ## Task 1: Listing namespaces
 
 To see which namespaces are available use the `kubectl get namespaces` command:
@@ -32,7 +26,7 @@ kube-system   Active    40m
 
 ## Task 2: Creating a new namespace
 
-Creating a namespace is easy, `kubectl create namespace test-${USERNAME}`:
+Creating a namespace is easy, `kubectl create namespace test`:
 
 ```
 kubectl create namespace test-${USERNAME}
@@ -49,7 +43,7 @@ NAME           STATUS    AGE
 default        Active    45m
 kube-public    Active    45m
 kube-system    Active    45m
-test-trescst   Active    1m
+test           Active    1m
 ```
 
 > NOTE: as you can see we abreviated `namespace` to `ns`, most of the objects in
@@ -161,11 +155,11 @@ test          hello-world                                            1/1       R
 ## Task 5: Deleting namespaces
 
 Deleting a namespace is very easy, keep in mind however that when you delete a
-namespace *all* the objects in that namespace will be deleten.  So always verify
+namespace *all* the objects in that namespace will be deleten. So always verify
 that all the objects in that namespace can be deleted:
 
 ```
-kubectl delete ns test-${USERNAME}
+kubectl delete ns test
 
-namespace "test-trescst" deleted
+namespace "test" deleted
 ```
