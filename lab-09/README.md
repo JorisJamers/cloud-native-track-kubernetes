@@ -1,11 +1,11 @@
 # Lab 09 - Persistent Volumes
 
-Persistent volumes can be used to store stateful/persistent data, this means 
-that when a pods is replaced its successor will still have the data available. 
-This can be used when you want to run persistent databases in pods and/or when 
+Persistent volumes can be used to store stateful/persistent data, this means
+that when a pods is replaced its successor will still have the data available.
+This can be used when you want to run persistent databases in pods and/or when
 you want to share data between different pods.
 
-In this lab we will make a persistent volume that we fill with images, those 
+In this lab we will make a persistent volume that we fill with images, those
 images will then be served by our application (pods).
 
 ## Task 0: Creating a namespace
@@ -18,7 +18,7 @@ kubectl create ns lab-09
 namespace "lab-09" created
 ```
 
-## Task 1 : Generating some stateful/persistent data
+## Task 1: Generating some stateful/persistent data
 
 First we will need to ssh into the minikube instance.
 
@@ -26,7 +26,7 @@ First we will need to ssh into the minikube instance.
 minikube ssh
 ```
 
-When you are in the minikube instance make sure that you are root. Otherwise you 
+When you are in the minikube instance make sure that you are root. Otherwise you
 might not be have permission to create the required directories and/or files:
 
 ```
@@ -57,10 +57,10 @@ exit
 exit
 ```
 
-## Task 2 : Create a persistent volume
+## Task 2: Create a persistent volume
 
-In this task we are going to create the persistent volume. This will put the 
-volume in a `Available` state. It's not yet bound to a persistent volume claim 
+In this task we are going to create the persistent volume. This will put the
+volume in a `Available` state. It's not yet bound to a persistent volume claim
 at this point.  Keep in mind that a persistent volume is not namespaced!
 
 Create a file `lab-09-pv.yml` with the following content.
@@ -101,10 +101,10 @@ NAME            CAPACITY   ACCESSMODES   RECLAIMPOLICY   STATUS      CLAIM     S
 lab-09-volume   1Gi        ROX           Retain          Available             manual                   23s
 ```
 
-## Task 3 : Claim a persistent Volume
+## Task 3: Claim a persistent Volume
 
-Now we need to create the claim for this persistent volume. This way we can bind 
-the persistent volume claim to a deployment. First we need to create the file 
+Now we need to create the claim for this persistent volume. This way we can bind
+the persistent volume claim to a deployment. First we need to create the file
 `lab-09-pvc.yml` with the following content.
 
 ```
@@ -138,12 +138,12 @@ NAME           STATUS   VOLUME          CAPACITY   ACCESS MODES   STORAGECLASS  
 lab-09-claim   Bound    lab-09-volume   1Gi        ROX            manual         28s
 ```
 
-## Task 4 : Mounting a persistent volume in pods
+## Task 4: Mounting a persistent volume in pods
 
 Now we are able to use the PersistentVolumeClaim in a pod. The following
 steps will show you how you can do this.
 
-First we need to create a file that describes our pod. This will be 
+First we need to create a file that describes our pod. This will be
 `lab-09-deployment.yml` with the following content.
 
 ```
@@ -195,7 +195,7 @@ meme-persistent-84cdc97446-dh59c   1/1     Running   0          31s
 meme-persistent-84cdc97446-tq8h8   1/1     Running   0          31s
 ```
 
-Create a service to access the application, create a file `lab-09-service.yml` 
+Create a service to access the application, create a file `lab-09-service.yml`
 with the content below:
 
 ```
@@ -227,11 +227,11 @@ Check the application:
 minikube service meme-persistent -n lab-09
 ```
 
-When you refresh the page you should see that again the avatar changes (there 
-are three pods), but the images remain the same (the PHP script will simply 
+When you refresh the page you should see that again the avatar changes (there
+are three pods), but the images remain the same (the PHP script will simply
 show all the images from the persistent volume directory).
 
-You can download one additional image and this should instantly be available on 
+You can download one additional image and this should instantly be available on
 all the pods:
 
 ```
