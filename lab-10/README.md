@@ -324,6 +324,29 @@ External Traffic Policy:  Cluster
 Events:                   <none>
 ```
 
+At this moment if we remove the `/tmp/healthy` the pod will become unhealhty.
+
+```
+kubernetes exec probes rm /tmp/healthy -n lab-10
+```
+
+If we describe the pod we will see in the recent events that the pod became unhealhty.
+
+```
+kubernetes describe pod probes -n lab-10
+
+
+Events:
+  Type     Reason     Age                From               Message
+  ----     ------     ----               ----               -------
+  Normal   Scheduled  21m                default-scheduler  Successfully assigned lab-10/probes to minikube
+  Normal   Pulling    21m                kubelet, minikube  pulling image "busybox"
+  Normal   Pulled     21m                kubelet, minikube  Successfully pulled image "busybox"
+  Normal   Created    21m                kubelet, minikube  Created container
+  Normal   Started    21m                kubelet, minikube  Started container
+  Warning  Unhealthy  1m (x2 over 2m)    kubelet, minikube  Liveness probe failed: cat: can't open '/tmp/healthy': No such file or directory
+```
+
 ## Task 4: Node labeling
 
 Create a fresh namespace for this task.
