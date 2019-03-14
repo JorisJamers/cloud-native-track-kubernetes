@@ -273,6 +273,18 @@ Apply the deployment.
 kubectl apply -f label-deployment.yml -n lab-10
 ```
 
+### Taints
+
+It's also possible to taint a node. This means that the node will explicitly
+reject nodes with a defined label.
+
+```
+kubectl taint nodes minikube environment=test:NoSchedule
+```
+
+If you use this commando the `minikube` node will reject all pods with the label
+`environment = test`. 
+
 TODO
 * list
 * green/blue
