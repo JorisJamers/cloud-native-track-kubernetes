@@ -12,7 +12,7 @@ namespace "lab-10" created
 
 ## Task 1:
 
-## Task 2: green / blue deployment
+## Task 2: Blue / green deployment
 
 For this task we are creating 2 versions of 1 deployment. This means that we
 can use the service to piont to either of the deployments. This can be used for
@@ -176,11 +176,102 @@ minikube service container-info -n lab-10
 
 When you did these steps succesfully you have done a `blue / green` on `minikube`
 
+Delete the namespace so we can start off with a clean namespace for the following
+tasks.
 
-## Task 3:
+```
+kubectl delete namespace lab-10
+```
 
-## Task 4:
 
+## Task 3: Liveness / readiness
+
+
+
+## Task 4: Node labeling
+
+Create a fresh namespace for this task.
+
+```
+kubectl create namespace lab-10
+```
+
+The basic node labeling will give you the option to restrict pods to specific nodes.
+This could be very usefull if you are running multiple environments. Imagine that
+we are pushing our application from `test` to `uat` to `prod`. With node labeling
+you can specify for example that all the pods of the `test` environment are going
+to be scheduled on the `test` node.
+
+Because we are using `minikube` in this lab, we only have 1 node. This example will
+show you how you can label the `minikube` node and make sure that the `application` is running on this `minikube` node.
+
+First we need to find the name of the node.
+
+```
+kubectl get nodes
+
+NAME       STATUS    ROLES     AGE       VERSION
+minikube   Ready     master    2d        v1.13.3
+```
+
+Now you can add a label to the `minikube` node with the following command.
+
+```
+kubectl label nodes minikube environment=test
+```
+
+This labels the `minikube` node with the `environment=test` label. You can confirm
+that the node is labeled with the command.
+
+```
+kubectl get nodes --show-labels
+
+NAME       STATUS    ROLES     AGE       VERSION   LABELS
+minikube   Ready     master    2d        v1.13.3   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,environment=test,kubernetes.io/hostname=minikube,node-role.kubernetes.io/master=
+```
+
+Create a new deployment file `label-deployment.yml` and add this content to it.
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: container-info-blue
+  labels:
+    app: container-info
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: container-info
+  template:
+    metadata:
+      labels:
+        app: container-info
+        version: "blue"
+    spec:
+      containers:
+      - name: container-info
+        image: gluobe/container-info:blue
+        ports:
+        - containerPort: 80
+      nodeSelector:
+        environment: test
+```
+
+This is basically the `blue.yml` deployment. We added the
+
+```
+nodeSelector:
+  environment: test
+```
+
+And this will define that the deployment is going to run on this specific node.
+Apply the deployment.
+
+```
+kubectl apply -f label-deployment.yml -n lab-10
+```
 
 TODO
 * list
