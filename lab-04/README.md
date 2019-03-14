@@ -60,14 +60,16 @@ kubectl port-forward pod/nginx 8080:80 -n lab-04
 ```
 
 Now go to your browser and surf to http://localhost:8080, you should be greeted
-with the default nginx welcome page.
+with the default nginx welcome page:
+
+![nginx welcome page](images/lab-04-nginx-welcome-page.png)
 
 If that works you can close the port-foward connection by pressing `CTRL+c`.
 
 ## Task 3: Connecting to your pod
 
 To connect to your pod, you can use the following command (notice how it
-resembles the `docker exec` command):
+resembles the `docker exec` command in options and functionality):
 
 ```
 kubectl exec -ti nginx bash -n lab-04
@@ -80,6 +82,10 @@ troubleshooting, but keep in mind that by default pods/containers are immutable
 so remember to not make any changes inside the pods/container.
 
 To exit run the `exit` command.
+
+```
+exit
+```
 
 ## Task 4: Pod logs
 
@@ -95,6 +101,10 @@ kubectl logs nginx -n lab-04
 127.0.0.1 - - [11/Mar/2019:11:40:49 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
 127.0.0.1 - - [11/Mar/2019:11:40:50 +0000] "GET / HTTP/1.1" 200 612 "-" "curl/7.52.1" "-"
 ```
+
+> NOTE: if your logs are empty, repeat Task 2 where you `kubectl port-forward` 
+> the container port and hit reload the page a couple more times in your 
+> browser
 
 A very handy option of `kubectl logs` is that you can follow them using the `-f`
 option, this is extremely useful when troubleshooting:

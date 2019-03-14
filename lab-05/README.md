@@ -2,7 +2,8 @@
 
 Although relatively easy in concept, this lab is a very important one when 
 working with Kubernetes.  In this lab we introduce YAML as a way to describe 
-objects in Kubernetes.
+objects in Kubernetes.  So far we only used specific `kubectl` commands to 
+create a limited set of objects.
 
 If you are not very familiar with YAML check out the website below for a basic
 introduction and its relevance for Kubernetes:
@@ -34,6 +35,18 @@ kubectl apply -f lab-05-namespace.yml
 namespace/lab-05 created
 ```
 
+Check that the namespace has indeed been created:
+
+```
+kubectl get namespaces
+
+NAME          STATUS   AGE
+default       Active   22h
+kube-public   Active   22h
+kube-system   Active   22h
+lab-05        Active   23s
+```
+
 ## Task 2: Deleting objects using YAML
 
 Deleting an object is even easier, only requirement is that you have the orignal
@@ -48,7 +61,8 @@ namespace "lab-05" deleted
 ## Task 3: Multiple objects
 
 When you have multiple objects you have different options:
-* you can put multiple objects in the same YAML (using lists)
+* you can put multiple objects in the same YAML (using lists), we will cover 
+this in a later lab
 * you can have multiple YAML files inside a directory and `kubectl apply` the
 directory (for example: `kubectl apply -f directory_full_of_yaml/`)
 
@@ -58,7 +72,15 @@ When working with YAML you can use namespaces in different ways:
 * metadata in YAML
 * option on the command line
 
-When working with metadata your YAML will look like this:
+As we deleted the namespace in a previous task we first need to recreate it:
+
+```
+kubectl apply -f lab-05-namespace.yml
+
+namespace/lab-05 created
+```
+
+When working with metadata your YAML to create a single pod will look like this:
 
 ```
 apiVersion: v1
@@ -72,12 +94,12 @@ spec:
     image: nginx
 ```
 
-You will create the object using:
+Save the above content into `lab-05-pod-metadata-ns.yml` and apply it:
 
 ```
-kubectl apply -f lab-05-metadata_namespace.yml
+kubectl apply -f lab-05-pod-metadata-ns.yml
 
-namespace "lab-05" deleted
+pod/nginx created
 ```
 
 Or you can omit the namespace in the metadata and provide it at the command
@@ -94,11 +116,14 @@ spec:
     image: nginx
 ```
 
-In this case you will create the object using:
+Save the above content into `lab-05-pod.yml` and apply it:
+```
+kubectl apply -f lab-05-pod.yml -n lab-05
 
+pod/nginx unchanged
 ```
-kubectl apply -f lab-05-without_metadata_namespace.yml -n lab-05
-```
+
+> NOTE: you will get the `pod/nginx` unchanged message as nothing has changed
 
 Both options have their specific use-cases.
 
