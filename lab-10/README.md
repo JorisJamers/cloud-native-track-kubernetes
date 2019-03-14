@@ -22,7 +22,7 @@ container-info application again to demo this feature.
 First we will create a blue deployment. This is the first and initial version
 of our application.
 
-Create a file `blue.yml` with the following content.
+Create a file `lab-10-deployment-blue.yml` with the following content.
 
 ```
 apiVersion: apps/v1
@@ -53,10 +53,10 @@ As you can see we have added a new label called `version` with this label we can
 select the correct deployment in the service we are creating in this task.
 
 ```
-kubectl apply -f blue.yml -n lab-10
+kubectl apply -f lab-10-deployment-blue.yml -n lab-10
 ```
 
-Now create the file `service.yml` with the following content.
+Now create the file `lab-10-service-blue-green.yml` with the following content.
 
 ```
 kind: Service
@@ -78,7 +78,7 @@ Notice that in the `spec:selector:version` we chose for `blue` this specifies
 the version of the deployment we are going to expose.
 
 ```
-kubectl apply -f service.yml -n lab-10
+kubectl apply -f lab-10-service-blue-green.yml -n lab-10
 ```
 
 Confirm that the application is running by doing to following command.
@@ -91,8 +91,8 @@ You will see that our `blue` version of the deployment is now running on our
 minikube instance.
 
 After you exposed the `blue` version we are going to create a `green` version
-of the application. This is done by creating a file `green.yml` with the following
-content.
+of the application. This is done by creating a file 
+`lab-10-deployment-green.yml` with the following content.
 
 ```
 apiVersion: apps/v1
@@ -123,7 +123,7 @@ We changed some parameters from `blue` to `green`, notice that the image changed
 as well. We are now deploying a `green` version.
 
 ```
-kubectl -f green.yml -n lab-10
+kubectl -f lab-10-deployment-green.yml -n lab-10
 ```
 
 If you list the deployments in your namespace you will see that we now have 2
@@ -137,12 +137,12 @@ container-info-blue    3         3         3            3           12m
 container-info-green   3         3         3            3           12m
 ```
 
-A `blue` and a `green` version. Remember that our service is still pointing at the
-`blue` version. In the next step we will update the service in a way that it will
-point to the `green` version of our deployment.
+A `blue` and a `green` version. Remember that our service is still pointing at 
+the `blue` version. In the next step we will update the service in a way that it 
+will point to the `green` version of our deployment.
 
-Edit the `service.yml` file. You can also just clear the file and copy the following
-content.
+Edit the `lab-10-service-blue-green.yml` file. You can also just clear the file 
+and copy the following content.
 
 ```
 kind: Service
@@ -160,11 +160,11 @@ spec:
   type: NodePort
 ```
 
-The only thing that is updated in this file is basically the `version` this is set
-to `green` now.
+The only thing that is updated in this file is basically the `version` this is 
+set to `green` now.
 
 ```
-kubectl apply -f service.yml -n lab-10
+kubectl apply -f lab-10-service-blue-green.yml -n lab-10
 ```
 
 Now you can run the service command again to check your newly updated version of
@@ -176,8 +176,8 @@ minikube service container-info -n lab-10
 
 When you did these steps succesfully you have done a `blue / green` on `minikube`
 
-Delete the namespace so we can start off with a clean namespace for the following
-tasks.
+Delete the namespace so we can start off with a clean namespace for the 
+following tasks.
 
 ```
 kubectl delete namespace lab-10
@@ -274,9 +274,10 @@ kubectl apply -f label-deployment.yml -n lab-10
 ```
 ### Task 4.1: Pod Affinity
 
-Pod Affinity means that you can schedule pods with the same label on the same pod.
-If available. So imagine that we want our `test` pod to run next to other pods
-with the label `test` on a node. We need to define the `podAffinity` like this.
+Pod Affinity means that you can schedule pods with the same label on the same 
+pod. If available. So imagine that we want our `test` pod to run next to other 
+pods with the label `test` on a node. We need to define the `podAffinity` like 
+this.
 
 ```
 apiVersion: v1
@@ -300,10 +301,9 @@ spec:
 
 We are using `requiredDuringSchedulingIgnoredDuringExecution` this means that
 this is a requirement while the pod is getting scheduled. It's also possible to
-define `preferredDuringSchedulingIgnoredDuringExecution`. This means that he will
-try to schedule the pod with these conditions if possible. Otherwise it will
-schedule the pod on a other node.
-
+define `preferredDuringSchedulingIgnoredDuringExecution`. This means that he 
+will try to schedule the pod with these conditions if possible. Otherwise it 
+will schedule the pod on a other node.
 
 ### Task 4.2: Pod Anti Affinity
 
@@ -331,11 +331,10 @@ spec:
 ```
 
 The pod will `not` schedule next to the already running `test` environment pod
-on any node. This means that the scheduler is going to look for another pod where
-no pod is running with the label `environment=test`.
+on any node. This means that the scheduler is going to look for another pod 
+where no pod is running with the label `environment=test`.
 
-
-### Task 4.1: Taints
+### Task 4.3: Taints
 
 It's also possible to taint a node. This means that the node will explicitly
 reject nodes with a defined label.

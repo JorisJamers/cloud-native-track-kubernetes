@@ -35,10 +35,8 @@ information about the nodes:
 ```
 kubectl get nodes -o wide
 
-NAME                                        STATUS    ROLES     AGE       VERSION         EXTERNAL-IP     OS-IMAGE                             KERNEL-VERSION   CONTAINER-RUNTIME
-gke-kbc-steven-default-pool-b82ee1c9-5n9j   Ready     <none>    21m       v1.11.7-gke.4   35.188.203.43   Container-Optimized OS from Google   4.14.89+         docker://17.3.2
-gke-kbc-steven-default-pool-b82ee1c9-6wnx   Ready     <none>    21m       v1.11.7-gke.4   35.192.143.33   Container-Optimized OS from Google   4.14.89+         docker://17.3.2
-gke-kbc-steven-default-pool-b82ee1c9-x13z   Ready     <none>    21m       v1.11.7-gke.4   23.251.156.4    Container-Optimized OS from Google   4.14.89+         docker://17.3.2
+NAME       STATUS   ROLES    AGE   VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE            KERNEL-VERSION   CONTAINER-RUNTIME
+minikube   Ready    master   21h   v1.13.4   10.0.2.15     <none>        Buildroot 2018.05   4.15.0           docker://18.6.2
 ```
 
 ## Task 2: Getting detailed node information
@@ -47,99 +45,84 @@ If we want more detailed information about a node we have to use the
 `kubectl describe node <node_name>` command:
 
 ```
-kubectl describe node gke-kbc-steven-default-pool-b82ee1c9-5n9j
-
-Name:               gke-kbc-steven-default-pool-b82ee1c9-5n9j
-Roles:              <none>
+Name:               minikube
+Roles:              master
 Labels:             beta.kubernetes.io/arch=amd64
-                    beta.kubernetes.io/fluentd-ds-ready=true
-                    beta.kubernetes.io/instance-type=n1-standard-1
                     beta.kubernetes.io/os=linux
-                    cloud.google.com/gke-nodepool=default-pool
-                    cloud.google.com/gke-os-distribution=cos
-                    failure-domain.beta.kubernetes.io/region=us-central1
-                    failure-domain.beta.kubernetes.io/zone=us-central1-a
-                    kubernetes.io/hostname=gke-kbc-steven-default-pool-b82ee1c9-5n9j
-Annotations:        container.googleapis.com/instance_id=2496827992163718317
-                    node.alpha.kubernetes.io/ttl=0
-                    volumes.kubernetes.io/controller-managed-attach-detach=true
-CreationTimestamp:  Mon, 11 Mar 2019 10:30:17 +0100
+                    kubernetes.io/hostname=minikube
+                    node-role.kubernetes.io/master=
+Annotations:        kubeadm.alpha.kubernetes.io/cri-socket: /var/run/dockershim.sock
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Wed, 13 Mar 2019 11:41:06 +0100
 Taints:             <none>
 Unschedulable:      false
 Conditions:
-  Type                          Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
-  ----                          ------  -----------------                 ------------------                ------                       -------
-  FrequentKubeletRestart        False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:33:53 +0100   FrequentKubeletRestart       kubelet is functioning properly
-  FrequentDockerRestart         False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:33:54 +0100   FrequentDockerRestart        docker is functioning properly
-  FrequentContainerdRestart     False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:33:55 +0100   FrequentContainerdRestart    containerd is functioning properly
-  CorruptDockerOverlay2         False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:33:53 +0100   CorruptDockerOverlay2        docker overlay2 is functioning properly
-  KernelDeadlock                False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:28:52 +0100   KernelHasNoDeadlock          kernel has no deadlock
-  ReadonlyFilesystem            False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:28:52 +0100   FilesystemIsNotReadOnly      Filesystem is not read-only
-  FrequentUnregisterNetDevice   False   Mon, 11 Mar 2019 11:01:14 +0100   Mon, 11 Mar 2019 10:33:53 +0100   UnregisterNetDevice          node is functioning properly
-  NetworkUnavailable            False   Mon, 11 Mar 2019 10:30:29 +0100   Mon, 11 Mar 2019 10:30:29 +0100   RouteCreated                 RouteController created a route
-  OutOfDisk                     False   Mon, 11 Mar 2019 11:01:32 +0100   Mon, 11 Mar 2019 10:30:17 +0100   KubeletHasSufficientDisk     kubelet has sufficient disk space available
-  MemoryPressure                False   Mon, 11 Mar 2019 11:01:32 +0100   Mon, 11 Mar 2019 10:30:17 +0100   KubeletHasSufficientMemory   kubelet has sufficient memory available
-  DiskPressure                  False   Mon, 11 Mar 2019 11:01:32 +0100   Mon, 11 Mar 2019 10:30:17 +0100   KubeletHasNoDiskPressure     kubelet has no disk pressure
-  PIDPressure                   False   Mon, 11 Mar 2019 11:01:32 +0100   Mon, 11 Mar 2019 10:30:17 +0100   KubeletHasSufficientPID      kubelet has sufficient PID available
-  Ready                         True    Mon, 11 Mar 2019 11:01:32 +0100   Mon, 11 Mar 2019 10:30:37 +0100   KubeletReady                 kubelet is posting ready status. AppArmor enabled
+  Type             Status  LastHeartbeatTime                 LastTransitionTime                Reason                       Message
+  ----             ------  -----------------                 ------------------                ------                       -------
+  MemoryPressure   False   Thu, 14 Mar 2019 09:28:46 +0100   Wed, 13 Mar 2019 11:41:02 +0100   KubeletHasSufficientMemory   kubelet has sufficient memory available
+  DiskPressure     False   Thu, 14 Mar 2019 09:28:46 +0100   Wed, 13 Mar 2019 11:41:02 +0100   KubeletHasNoDiskPressure     kubelet has no disk pressure
+  PIDPressure      False   Thu, 14 Mar 2019 09:28:46 +0100   Wed, 13 Mar 2019 11:41:02 +0100   KubeletHasSufficientPID      kubelet has sufficient PID available
+  Ready            True    Thu, 14 Mar 2019 09:28:46 +0100   Wed, 13 Mar 2019 11:41:02 +0100   KubeletReady                 kubelet is posting ready status
 Addresses:
-  InternalIP:  10.128.0.37
-  ExternalIP:  35.188.203.43
-  Hostname:    gke-kbc-steven-default-pool-b82ee1c9-5n9j
+  InternalIP:  10.0.2.15
+  Hostname:    minikube
 Capacity:
- cpu:                1
- ephemeral-storage:  98868448Ki
+ cpu:                2
+ ephemeral-storage:  16888216Ki
  hugepages-2Mi:      0
- memory:             3787656Ki
+ memory:             2038624Ki
  pods:               110
 Allocatable:
- cpu:                940m
- ephemeral-storage:  47093746742
+ cpu:                2
+ ephemeral-storage:  15564179840
  hugepages-2Mi:      0
- memory:             2702216Ki
+ memory:             1936224Ki
  pods:               110
 System Info:
- Machine ID:                 6ea81fc2b497faf269c516c42061b928
- System UUID:                6EA81FC2-B497-FAF2-69C5-16C42061B928
- Boot ID:                    fcf8db1e-f20a-47af-933d-7886cbfa3fa3
- Kernel Version:             4.14.89+
- OS Image:                   Container-Optimized OS from Google
+ Machine ID:                 09cffa828b994b05afa9f2355d79bc40
+ System UUID:                E8B09A49-00D6-470C-8F95-73077565B18B
+ Boot ID:                    38f4793c-9937-4cf6-b4ff-5973e97ad6b1
+ Kernel Version:             4.15.0
+ OS Image:                   Buildroot 2018.05
  Operating System:           linux
  Architecture:               amd64
- Container Runtime Version:  docker://17.3.2
- Kubelet Version:            v1.11.7-gke.4
- Kube-Proxy Version:         v1.11.7-gke.4
-PodCIDR:                     10.24.1.0/24
-ExternalID:                  gke-kbc-steven-default-pool-b82ee1c9-5n9j
-ProviderID:                  gce://certain-nexus-865/us-central1-a/gke-kbc-steven-default-pool-b82ee1c9-5n9j
-Non-terminated Pods:         (4 in total)
-  Namespace                  Name                                                    CPU Requests  CPU Limits  Memory Requests  Memory Limits
-  ---------                  ----                                                    ------------  ----------  ---------------  -------------
-  kube-system                fluentd-gcp-v3.2.0-st25d                                100m (10%)    1 (106%)    200Mi (7%)       500Mi (18%)
-  kube-system                heapster-v1.6.0-beta.1-575d556fcd-dxfz6                 138m (14%)    138m (14%)  301856Ki (11%)   301856Ki (11%)
-  kube-system                kube-proxy-gke-kbc-steven-default-pool-b82ee1c9-5n9j    100m (10%)    0 (0%)      0 (0%)           0 (0%)
-  kube-system                metrics-server-v0.2.1-fd596d746-5qpdw                   53m (5%)      148m (15%)  154Mi (5%)       404Mi (15%)
+ Container Runtime Version:  docker://18.6.2
+ Kubelet Version:            v1.13.4
+ Kube-Proxy Version:         v1.13.4
+Non-terminated Pods:         (19 in total)
+  Namespace                  Name                                CPU Requests  CPU Limits  Memory Requests  Memory Limits  AGE
+  ---------                  ----                                ------------  ----------  ---------------  -------------  ---
+  default                    container-info-6d9747978f-lrt4s     0 (0%)        0 (0%)      0 (0%)           0 (0%)         20h
+  default                    container-info-6d9747978f-vbfbp     0 (0%)        0 (0%)      0 (0%)           0 (0%)         20h
+  default                    container-info-6d9747978f-zv7hw     0 (0%)        0 (0%)      0 (0%)           0 (0%)         20h
+  kube-system                coredns-86c58d9df4-gp858            100m (5%)     0 (0%)      70Mi (3%)        170Mi (8%)     21h
+  kube-system                coredns-86c58d9df4-vgqf8            100m (5%)     0 (0%)      70Mi (3%)        170Mi (8%)     21h
+  kube-system                etcd-minikube                       0 (0%)        0 (0%)      0 (0%)           0 (0%)         21h
+  kube-system                kube-addon-manager-minikube         5m (0%)       0 (0%)      50Mi (2%)        0 (0%)         21h
+  kube-system                kube-apiserver-minikube             250m (12%)    0 (0%)      0 (0%)           0 (0%)         21h
+  kube-system                kube-controller-manager-minikube    200m (10%)    0 (0%)      0 (0%)           0 (0%)         19h
+  kube-system                kube-proxy-48x92                    0 (0%)        0 (0%)      0 (0%)           0 (0%)         19h
+  kube-system                kube-scheduler-minikube             100m (5%)     0 (0%)      0 (0%)           0 (0%)         21h
+  kube-system                storage-provisioner                 0 (0%)        0 (0%)      0 (0%)           0 (0%)         21h
+  lab-06                     container-info-5776f489fb-lvbjx     0 (0%)        0 (0%)      0 (0%)           0 (0%)         17h
+  lab-07                     container-info-6d9747978f-2x5r7     0 (0%)        0 (0%)      0 (0%)           0 (0%)         20h
+  lab-07                     container-info-6d9747978f-c9twz     0 (0%)        0 (0%)      0 (0%)           0 (0%)         20h
+  lab-07                     container-info-6d9747978f-sqvtw     0 (0%)        0 (0%)      0 (0%)           0 (0%)         20h
+  lab-09                     meme-persistent-84cdc97446-bljrg    0 (0%)        0 (0%)      0 (0%)           0 (0%)         17h
+  lab-09                     meme-persistent-84cdc97446-rftlm    0 (0%)        0 (0%)      0 (0%)           0 (0%)         17h
+  lab-09                     meme-persistent-84cdc97446-wjgjk    0 (0%)        0 (0%)      0 (0%)           0 (0%)         17h
 Allocated resources:
   (Total limits may be over 100 percent, i.e., overcommitted.)
-  CPU Requests  CPU Limits    Memory Requests  Memory Limits
-  ------------  ----------    ---------------  -------------
-  391m (41%)    1286m (136%)  664352Ki (24%)   1227552Ki (45%)
+  Resource           Requests     Limits
+  --------           --------     ------
+  cpu                755m (37%)   0 (0%)
+  memory             190Mi (10%)  340Mi (17%)
+  ephemeral-storage  0 (0%)       0 (0%)
 Events:
-  Type    Reason                     Age                From                                                        Message
-  ----    ------                     ----               ----                                                        -------
-  Normal  Starting                   31m                kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Starting kubelet.
-  Normal  NodeHasSufficientDisk      31m (x2 over 31m)  kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Node gke-kbc-steven-default-pool-b82ee1c9-5n9j status is now: NodeHasSufficientDisk
-  Normal  NodeHasSufficientMemory    31m (x2 over 31m)  kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Node gke-kbc-steven-default-pool-b82ee1c9-5n9j status is now: NodeHasSufficientMemory
-  Normal  NodeHasNoDiskPressure      31m (x2 over 31m)  kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Node gke-kbc-steven-default-pool-b82ee1c9-5n9j status is now: NodeHasNoDiskPressure
-  Normal  NodeHasSufficientPID       31m (x2 over 31m)  kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Node gke-kbc-steven-default-pool-b82ee1c9-5n9j status is now: NodeHasSufficientPID
-  Normal  NodeAllocatableEnforced    31m                kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Updated Node Allocatable limit across pods
-  Normal  NodeReady                  30m                kubelet, gke-kbc-steven-default-pool-b82ee1c9-5n9j          Node gke-kbc-steven-default-pool-b82ee1c9-5n9j status is now: NodeReady
-  Normal  Starting                   30m                kube-proxy, gke-kbc-steven-default-pool-b82ee1c9-5n9j       Starting kube-proxy.
-  Normal  FrequentKubeletRestart     27m                systemd-monitor, gke-kbc-steven-default-pool-b82ee1c9-5n9j  Node condition FrequentKubeletRestart is now: False, reason: FrequentKubeletRestart
-  Normal  CorruptDockerOverlay2      27m                docker-monitor, gke-kbc-steven-default-pool-b82ee1c9-5n9j   Node condition CorruptDockerOverlay2 is now: False, reason: CorruptDockerOverlay2
-  Normal  UnregisterNetDevice        27m                kernel-monitor, gke-kbc-steven-default-pool-b82ee1c9-5n9j   Node condition FrequentUnregisterNetDevice is now: False, reason: UnregisterNetDevice
-  Normal  FrequentDockerRestart      27m                systemd-monitor, gke-kbc-steven-default-pool-b82ee1c9-5n9j  Node condition FrequentDockerRestart is now: False, reason: FrequentDockerRestart
-  Normal  FrequentContainerdRestart  27m                systemd-monitor, gke-kbc-steven-default-pool-b82ee1c9-5n9j  Node condition FrequentContainerdRestart is now: False, reason: FrequentContainerdRestart
+  Type    Reason    Age    From                  Message
+  ----    ------    ----   ----                  -------
+  Normal  Starting  3m19s  kube-proxy, minikube  Starting kube-proxy.
 ```
 
 Read through the output above to see all the information that is available about

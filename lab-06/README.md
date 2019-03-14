@@ -64,6 +64,8 @@ Forwarding from [::1]:8080 -> 80
 
 Check out the page: http://localhost:8080
 
+![container-info blue](images/lab-06-container-info.png)
+
 Kill the `kubectl port-forward` process by pressing `CTRL+c`.
 
 ## Task 2: Scaling a deployment
@@ -120,7 +122,8 @@ When our deployment consists of multiple pods we can't use the port-forward to
 reach all pods. In this scenario we will have to create a service and expose
 this service.
 
-In lab-06 we will dig deeper in creating a service. For now just follow these commands.
+In the next lab we will dig deeper in creating a service. For now just follow 
+these commands.
 
 ```
 kubectl expose deployment container-info --type=NodePort --name=container-info -n lab-06
